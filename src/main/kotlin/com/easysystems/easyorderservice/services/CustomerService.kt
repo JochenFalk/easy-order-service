@@ -1,7 +1,8 @@
 package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.*
-import mu.KLogger
+import com.easysystems.easyorderservice.repositories.TabletopRepository
+import com.easysystems.easyorderservice.repositories.UserRepository
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -13,7 +14,7 @@ class CustomerService {
     lateinit var message: String
 
     val userRepository = UserRepository()
-    val tableRepository = TableRepository()
+    val tabletopRepository = TabletopRepository()
 
     companion object : KLogging()
 
@@ -43,11 +44,11 @@ class CustomerService {
     fun addCustomerToTable(customerId: Int, tableId: Int, code: String) : Boolean {
 
         val customer = userRepository.getById(customerId) as Customer?
-        val table = tableRepository.getById(tableId)
+        val table = tabletopRepository.getById(tableId)
 
         if (customer != null && table != null)
         {
-            return customer.addCustomerToTable(table, code)
+            return customer.addCustomerToTabletop(table, code)
         } else {
             logger.warn { "Customer not added to table! Customer: $customer, Table: $table" }
             return  false

@@ -1,7 +1,7 @@
 package com.easysystems.easyorderservice.controllers
 
 import com.easysystems.easyorderservice.data.Customer
-import com.easysystems.easyorderservice.data.Table
+import com.easysystems.easyorderservice.data.TabletopDTO
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -11,8 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -65,12 +63,12 @@ class CustomerControllerIntgTest {
     fun addCustomerToTableTest()
     {
         val code = "Code1"
-        val table = Table(code = code)
+        val tableTopDTO = TabletopDTO(code = code)
         val customer = Customer(name = "Jerry")
         val expected = "true"
 
         val result = webTestClient.get()
-            .uri("/customers/add_customer_to_table/{customerId}/{tableId}/{code}", customer.id, table.id, code)
+            .uri("/customers/add_customer_to_table/{customerId}/{tableId}/{code}", customer.id, tableTopDTO.id, code)
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody(String::class.java)

@@ -1,7 +1,7 @@
 package com.easysystems.easyorderservice.controllers
 
 import com.easysystems.easyorderservice.data.Customer
-import com.easysystems.easyorderservice.data.Table
+import com.easysystems.easyorderservice.data.TabletopDTO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
@@ -65,14 +65,14 @@ internal class CustomerControllerUnitTest {
     fun addCustomerToTableTest()
     {
         val code = "Code1"
-        val table = Table(code = code)
+        val tableTopDTO = TabletopDTO(code = code)
         val customer = Customer(name = "Jerry")
         val expected = true
 
         every { customerControllerMockk.addCustomerToTable(any(),any(),any()) } returns (expected)
 
         val result = webTestClient.get()
-            .uri("/customers/add_customer_to_table/{customerId}/{tableId}/{code}", customer.id, table.id, code)
+            .uri("/customers/add_customer_to_table/{customerId}/{tableId}/{code}", customer.id, tableTopDTO.id, code)
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody(String::class.java)
