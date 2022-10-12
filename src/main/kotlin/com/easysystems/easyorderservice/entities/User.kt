@@ -4,9 +4,9 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "Users")
-data class User (
+open class User (
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    var id: Int?,
-    var name: String
+    open val id: Int?,
+    open var name: String
 )

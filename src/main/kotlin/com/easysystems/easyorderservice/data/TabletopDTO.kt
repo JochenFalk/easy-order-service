@@ -1,22 +1,16 @@
 package com.easysystems.easyorderservice.data
 
-import com.easysystems.easyorderservice.repositories.mainTabletopListDTO
 
 data class TabletopDTO(
     var id: Int?=0,
     var code: String,
-    var customers: ArrayList<Customer> = ArrayList(),
+    var customersDTO: ArrayList<CustomerDTO> = ArrayList(),
     var itemsDTO: ArrayList<ItemDTO> = ArrayList()
 ) {
 
-    init {
-        id = mainTabletopListDTO.size + 1
-        mainTabletopListDTO.add(this)
-    }
-
-    fun addItemToTabletop(item: ItemDTO, customer: Customer)
+    fun addItemToTabletop(item: ItemDTO, customerDTO: CustomerDTO)
     {
-        customer.itemDTOs.add(item)
+        customerDTO.items.add(item)
         itemsDTO.add(item)
     }
 }

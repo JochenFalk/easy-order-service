@@ -1,9 +1,12 @@
 package com.easysystems.easyorderservice.controllers
 
-import com.easysystems.easyorderservice.data.Customer
-import com.easysystems.easyorderservice.data.TabletopDTO
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.easysystems.easyorderservice.data.CustomerDTO
+import com.easysystems.easyorderservice.entities.Customer
+import com.easysystems.easyorderservice.repositories.CustomerRepository
+import mu.KLogging
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -17,63 +20,138 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @AutoConfigureWebTestClient
 class CustomerControllerIntgTest {
 
+    companion object : KLogging()
+
     @Autowired
     lateinit var webTestClient: WebTestClient
+
     @Autowired
-    lateinit var mapper: ObjectMapper
+    lateinit var customerRepository: CustomerRepository
 
-    @Test
-    fun createCustomerTest() {
-
-        // For this test id of expected object should be 2 as the object returned by the test is the 2nd object created
-
-        val name = "Tom"
-        val expected = Customer(id = 2, name = name)
-
-        val result = webTestClient.get()
-            .uri("/customers/create_customer/{name}", name)
-            .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody(String::class.java)
-            .returnResult()
-
-        val responseAsObject = mapper.readValue(result.responseBody, Customer::class.java)
-
-        Assertions.assertEquals(expected, responseAsObject)
+    @AfterEach
+    fun setUp() {
+        customerRepository.deleteAll()
     }
 
     @Test
-    fun deleteCustomerTest() {
+    fun createCustomer() {
 
-        val id = 10
-        val customer = Customer(id = id, name = "Jerry") // Create object to delete
-        val expected = "true"
+        val customerDTO = CustomerDTO(null, name = "Tom")
 
-        val result = webTestClient.get()
-            .uri("/customers/delete_customer/{customerId}", id)
+        val result = webTestClient.post()
+            .uri("/v1/customers")
+            .bodyValue(customerDTO)
             .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody(String::class.java)
+            .expectStatus().isCreated
+            .expectBody(CustomerDTO::class.java)
             .returnResult()
+            .responseBody
 
-        Assertions.assertEquals(expected, result.responseBody)
+        Assertions.assertTrue {
+            result!!.id != null
+        }
     }
 
     @Test
-    fun addCustomerToTableTest()
-    {
-        val code = "Code1"
-        val tableTopDTO = TabletopDTO(code = code)
-        val customer = Customer(name = "Jerry")
-        val expected = "true"
+    fun retrieveCustomerById() {
+
+        val customer = Customer(1, "Tom", 0, ArrayList()).apply {
+            customerRepository.save(this)
+        }
 
         val result = webTestClient.get()
-            .uri("/customers/add_customer_to_table/{customerId}/{tableId}/{code}", customer.id, tableTopDTO.id, code)
+            .uri("/v1/customers/{id}", customer.id)
             .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody(String::class.java)
+            .expectStatus().isOk
+            .expectBody(CustomerDTO::class.java)
             .returnResult()
+            .responseBody
 
-        Assertions.assertEquals(expected, result.responseBody)
+        logger.info("Test result: $result")
+        Assertions.assertEquals(customer.name, result!!.name)
     }
+
+    @Test
+    fun retrieveAllCustomers() {
+
+        val customers = listOf(
+            Customer(null, "Tom"),
+            Customer(null, "Jerry"),
+            Customer(null, "Tweety")
+        )
+        customerRepository.saveAll(customers)
+
+        val result = webTestClient.get()
+            .uri("/v1/customers")
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(CustomerDTO::class.java)
+            .returnResult()
+            .responseBody
+
+        logger.info("Test result: $result")
+        Assertions.assertEquals(3, result!!.size)
+    }
+
+    @Test
+    fun updateCustomer() {
+
+        val customer = Customer(1, "Tom", 0, ArrayList()).apply {
+            customerRepository.save(this)
+        }
+        val updatedCustomerDTO = CustomerDTO(1, "Tom", 1, ArrayList())
+
+        val result = webTestClient.put()
+            .uri("/v1/customers/{id}", customer.id)
+            .bodyValue(updatedCustomerDTO)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(CustomerDTO::class.java)
+            .returnResult()
+            .responseBody
+
+        logger.info("Test result: $result")
+        Assertions.assertEquals(updatedCustomerDTO.tableId, result!!.tableId)
+    }
+
+    @Test
+    fun deleteCustomer() {
+
+        val customer = Customer(1, "Tom", 0, ArrayList()).apply {
+            customerRepository.save(this)
+        }
+
+        webTestClient.delete()
+            .uri("/v1/customers/{id}", customer.id)
+            .exchange()
+            .expectStatus().isNoContent
+
+        val result = webTestClient.get()
+            .uri("/v1/customers")
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(CustomerDTO::class.java)
+            .returnResult()
+            .responseBody
+
+        logger.info("Test result: $result")
+        Assertions.assertEquals(0, result!!.size)
+    }
+
+//    @Test
+//    fun deleteCustomerTest() {
+//
+//        val id = 10
+//        val customerDTO = CustomerDTO(id = id, name = "Jerry") // Create object to delete
+//        val expected = "true"
+//
+//        val result = webTestClient.get()
+//            .uri("/v1/customers/delete_customer/{customerId}", id)
+//            .exchange()
+//            .expectStatus().is2xxSuccessful
+//            .expectBody(String::class.java)
+//            .returnResult()
+//
+//        Assertions.assertEquals(expected, result.responseBody)
+//    }
 }

@@ -1,6 +1,6 @@
 package com.easysystems.easyorderservice
 
-import com.easysystems.easyorderservice.data.Employee
+import com.easysystems.easyorderservice.data.EmployeeDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
 import mu.KLogging
 
@@ -8,9 +8,9 @@ object Authenticate {
 
     private val log : KLogging = KLogging()
 
-    fun authenticateEmployee(employee: Employee, name: String, password: String) : Boolean
+    fun authenticateEmployee(employeeDTO: EmployeeDTO, name: String, password: String) : Boolean
     {
-        if (employee.name == name && employee.password == password)
+        if (employeeDTO.name == name && employeeDTO.password == password)
         {
             log.logger.info("Employee $name is authenticated")
             return true

@@ -1,33 +1,45 @@
 package com.easysystems.easyorderservice.controllers
 
-import com.easysystems.easyorderservice.data.Customer
+import com.easysystems.easyorderservice.data.CustomerDTO
+import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.services.CustomerService
-import mu.KLogging
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
-
 @RestController
-@RequestMapping("/customers")
+@RequestMapping("/v1/customers")
 class CustomerController(val customerService: CustomerService){
 
-    companion object : KLogging()
-
-    @RequestMapping(path = ["/create_customer/{name}"], method = [RequestMethod.GET])
-    fun createCustomer(@PathVariable("name") name: String) : Customer {
-
-        return customerService.createCustomer(name)
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createCustomer(@RequestBody customerDTO: CustomerDTO) : CustomerDTO {
+        return customerService.createCustomer(customerDTO)
     }
 
-    @RequestMapping(path = ["/delete_customer/{customerId}"], method = [RequestMethod.GET])
-    fun deleteCustomer(@PathVariable("customerId") customerId: Int) : Boolean {
-
-        return customerService.deleteCustomer(customerId)
+    @GetMapping("/{id}")
+    fun retrieveCustomerById(@PathVariable("id") id: Int): CustomerDTO {
+        return customerService.retrieveCustomerById(id)
     }
 
-    @RequestMapping(path = ["/add_customer_to_table/{customerId}/{tableId}/{code}"], method = [RequestMethod.GET])
-    fun addCustomerToTable(@PathVariable customerId: Int, @PathVariable tableId: Int, @PathVariable code: String) : Boolean {
-
-        return customerService.addCustomerToTable(customerId, tableId, code)
+    @GetMapping
+    fun retrieveAllCustomers() : ArrayList<CustomerDTO> {
+        return customerService.retrieveAllCustomers()
     }
 
+    @PutMapping("/{id}")
+    fun updateCustomer(@RequestBody customerDTO: CustomerDTO, @PathVariable("id") id: Int): CustomerDTO {
+        return customerService.updateCustomer(id, customerDTO)
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteCustomer(@PathVariable("id") id: Int) {
+        return customerService.deleteCustomer(id)
+    }
+
+//    @RequestMapping(path = ["/delete_customer/{customerId}"], method = [RequestMethod.GET])
+//    fun deleteCustomer(@PathVariable("customerId") customerId: Int) : Boolean {
+//
+//        return customerService.deleteCustomer(customerId)
+//    }
 }

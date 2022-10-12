@@ -1,6 +1,5 @@
 package com.easysystems.easyorderservice.entities
 
-import com.easysystems.easyorderservice.data.ItemDTO
 import javax.persistence.*
 
 @Entity
@@ -8,8 +7,8 @@ import javax.persistence.*
 data class Item (
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    var id: Int?,
+    val id: Int?,
     var name: String,
-    var category: ItemDTO.Category,
+    var category: String,
     var price: Float
 )
