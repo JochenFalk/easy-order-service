@@ -10,5 +10,5 @@ data class Customer (
     override val id: Int?,
     override var name: String,
     var tableId: Int=0,
-    var items: ArrayList<Item> = ArrayList()
+    var items: ArrayList<Int> = ArrayList()
 ) : User(id, name)

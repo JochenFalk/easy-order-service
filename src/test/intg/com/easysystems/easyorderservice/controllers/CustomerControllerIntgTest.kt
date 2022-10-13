@@ -2,7 +2,9 @@ package com.easysystems.easyorderservice.controllers
 
 import com.easysystems.easyorderservice.data.CustomerDTO
 import com.easysystems.easyorderservice.entities.Customer
+import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.repositories.CustomerRepository
+import com.easysystems.easyorderservice.repositories.TabletopRepository
 import mu.KLogging
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
@@ -27,6 +29,9 @@ class CustomerControllerIntgTest {
 
     @Autowired
     lateinit var customerRepository: CustomerRepository
+
+    @Autowired
+    lateinit var tabletopRepository: TabletopRepository
 
     @AfterEach
     fun setUp() {
@@ -136,6 +141,28 @@ class CustomerControllerIntgTest {
 
         logger.info("Test result: $result")
         Assertions.assertEquals(0, result!!.size)
+    }
+
+    @Test
+    fun addCustomerToTabletop() {
+
+        val customer = Customer(null, "Tom", 0, ArrayList()).apply {
+            customerRepository.save(this)
+        }
+        val tabletop = Tabletop(null, "Code1", arrayListOf(1,1,1)).apply {
+            tabletopRepository.save(this)
+        }
+
+        val result = webTestClient.put()
+            .uri("/v1/customers//{customerId}/{tabletopId}/{tabletopCode}", customer.id, tabletop.id, tabletop.code)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(Boolean::class.java)
+            .returnResult()
+            .responseBody
+
+        logger.info("Test result: $result")
+        Assertions.assertEquals(true, result!!)
     }
 
 //    @Test

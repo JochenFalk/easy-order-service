@@ -1,6 +1,6 @@
 package com.easysystems.easyorderservice.controllers
 
-import com.easysystems.easyorderservice.data.ItemDTO
+import com.easysystems.easyorderservice.data.CustomerDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
 import com.easysystems.easyorderservice.services.TabletopService
 import org.springframework.http.HttpStatus
@@ -35,5 +35,13 @@ class TabletopController(val tabletopService: TabletopService) {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteTabletop(@PathVariable("id") id: Int) {
         return tabletopService.deleteTabletop(id)
+    }
+
+    @PutMapping("/{tabletopId}/{customerId}")
+    fun addOrderToTabletop(@RequestBody orderList: List<Int>,
+                           @PathVariable tabletopId: Int,
+                           @PathVariable customerId: Int
+    ): Boolean {
+        return tabletopService.addOrderToTabletop(tabletopId, customerId, orderList)
     }
 }

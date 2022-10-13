@@ -2,6 +2,7 @@ package com.easysystems.easyorderservice.controllers
 
 import com.easysystems.easyorderservice.data.CustomerDTO
 import com.easysystems.easyorderservice.entities.Customer
+import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.repositories.CustomerRepository
 import com.easysystems.easyorderservice.services.CustomerService
 import com.ninjasquad.springmockk.MockkBean
@@ -120,6 +121,23 @@ internal class CustomerControllerUnitTest {
             .uri("/v1/customers/{id}", 1)
             .exchange()
             .expectStatus().isNoContent
+    }
+
+    @Test
+    fun addCustomerToTabletop() {
+
+        every { customerServiceMockk.addCustomerToTabletop(any(), any(), any()) } returns (true)
+
+        val result = webTestClient.put()
+            .uri("/v1/customers//{customerId}/{tabletopId}/{tabletopCode}", 1, 2, "Code2")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody(Boolean::class.java)
+            .returnResult()
+            .responseBody
+
+        CustomerControllerIntgTest.logger.info("Test result: $result")
+        Assertions.assertEquals(true, result!!)
     }
 
 //    @Test

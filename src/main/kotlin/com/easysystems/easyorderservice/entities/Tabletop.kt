@@ -9,6 +9,5 @@ data class Tabletop (
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Int?,
     var code: String,
-    var customers: ArrayList<Customer> = ArrayList(),
-    var items: ArrayList<Item> = ArrayList()
+    var orders: ArrayList<Int> = ArrayList()
 )

@@ -5,13 +5,12 @@ import com.easysystems.easyorderservice.entities.Customer
 import com.easysystems.easyorderservice.entities.Item
 import com.easysystems.easyorderservice.exceptions.CustomerNotFoundException
 import com.easysystems.easyorderservice.repositories.CustomerRepository
-import com.easysystems.easyorderservice.repositories.TabletopRepository
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class CustomerService(val customerRepository: CustomerRepository, val tabletopRepository: TabletopRepository) {
+class CustomerService(val customerRepository: CustomerRepository, val authenticationService: AuthenticationService) {
 
     @Value("\${message}")
     lateinit var message: String
@@ -29,7 +28,7 @@ class CustomerService(val customerRepository: CustomerRepository, val tabletopRe
         logger.info("New customer created: $customer")
 
         return customer.let {
-            CustomerDTO(it.id, it.name, it.tableId, it.items as ArrayList<ItemDTO>)
+            CustomerDTO(it.id, it.name, it.tableId, it.items)
         }
     }
 
@@ -39,7 +38,7 @@ class CustomerService(val customerRepository: CustomerRepository, val tabletopRe
 
         return if (customer.isPresent) {
             customer.get().let {
-                CustomerDTO(it.id, it.name, it.tableId, it.items as ArrayList<ItemDTO>)
+                CustomerDTO(it.id, it.name, it.tableId, it.items)
             }
         } else {
             throw CustomerNotFoundException("No customer found for given id: $id")
@@ -50,7 +49,7 @@ class CustomerService(val customerRepository: CustomerRepository, val tabletopRe
 
         return customerRepository.findAll()
             .map {
-                CustomerDTO(it.id, it.name, it.tableId, it.items as ArrayList<ItemDTO>)
+                CustomerDTO(it.id, it.name, it.tableId, it.items)
             } as ArrayList<CustomerDTO>
     }
 
@@ -62,10 +61,10 @@ class CustomerService(val customerRepository: CustomerRepository, val tabletopRe
             customer.get().let {
                 it.name = customerDTO.name
                 it.tableId = customerDTO.tableId
-                it.items = customerDTO.items as ArrayList<Item>
+                it.items = customerDTO.items
                 customerRepository.save(it)
 
-                CustomerDTO(it.id, it.name, it.tableId, it.items as ArrayList<ItemDTO>)
+                CustomerDTO(it.id, it.name, it.tableId, it.items)
             }
         } else {
             throw CustomerNotFoundException("No customer found for given id: $id")
@@ -85,28 +84,28 @@ class CustomerService(val customerRepository: CustomerRepository, val tabletopRe
         }
     }
 
-//    fun deleteCustomer(id: Int): Boolean {
+    fun addCustomerToTabletop(customerId: Int, tabletopId: Int, tabletopCode: String): Boolean {
 
-//        try {
-//            customerRepository.deleteById(id)
-//            logger.info("Customer with id: $id is deleted")
-//            return true
-//        } catch (ex: Exception) {
-//            logger.warn("Customer with id: $id is not deleted! Exception: $ex")
-//            return false
-//        }
-//    }
+        val customer = customerRepository.findById(customerId)
 
-//    fun addCustomerToTable(customerId: Int, tableId: Int, code: String): Boolean {
-//
-//        val customer = customerRepository.findById(customerId)
-//        val table = tabletopRepository.findById(tableId)
-//
-//        if (customer != null && table != null) {
-//            return customerDTO.addCustomerToTabletop(table, code)
-//        } else {
-//            logger.warn { "Customer not added to table! Customer: $customerDTO, Table: $table" }
-//            return false
-//        }
-//    }
+        if (customer.isPresent) {
+
+            customer.get().let {
+
+                if (authenticationService.tabletop(tabletopId, tabletopCode)) {
+
+                    it.tableId = tabletopId
+                    customerRepository.save(it)
+
+                    logger.info("Customer ${it.name} is added to table $tabletopId")
+                    return true
+                } else {
+                    logger.info("Customer ${it.name} was not added! Authentication for table $tabletopId failed")
+                    return false
+                }
+            }
+        } else {
+            throw CustomerNotFoundException("No customer found for given id: $customerId")
+        }
+    }
 }

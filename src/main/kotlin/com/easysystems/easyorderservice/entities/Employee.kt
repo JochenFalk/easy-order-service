@@ -10,5 +10,5 @@ data class Employee(
     override val id: Int?,
     override var name: String,
     var password: String,
-    var tabletops: ArrayList<Tabletop> = ArrayList()
+    var tabletops: ArrayList<Int> = ArrayList()
 ) : User(id, name)

@@ -37,4 +37,12 @@ class EmployeeController(val employeeService: EmployeeService ) {
     fun deleteEmployee(@PathVariable("id") id: Int) {
         return employeeService.deleteEmployee(id)
     }
+
+    @PutMapping("/{tabletopId}/{employeeId}/{name}/{password}")
+    fun assignEmployeeToTabletop(@PathVariable tabletopId: Int,
+                                 @PathVariable employeeId: Int,
+                                 @PathVariable name: String,
+                                 @PathVariable password: String): Boolean {
+        return employeeService.assignEmployeeToTabletop(tabletopId, employeeId, name, password)
+    }
 }

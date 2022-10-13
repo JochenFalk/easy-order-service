@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/v1/customers")
-class CustomerController(val customerService: CustomerService){
+class CustomerController(val customerService: CustomerService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createCustomer(@RequestBody customerDTO: CustomerDTO) : CustomerDTO {
+    fun createCustomer(@RequestBody customerDTO: CustomerDTO): CustomerDTO {
         return customerService.createCustomer(customerDTO)
     }
 
@@ -22,12 +22,13 @@ class CustomerController(val customerService: CustomerService){
     }
 
     @GetMapping
-    fun retrieveAllCustomers() : ArrayList<CustomerDTO> {
+    fun retrieveAllCustomers(): ArrayList<CustomerDTO> {
         return customerService.retrieveAllCustomers()
     }
 
     @PutMapping("/{id}")
-    fun updateCustomer(@RequestBody customerDTO: CustomerDTO, @PathVariable("id") id: Int): CustomerDTO {
+    fun updateCustomer(@RequestBody customerDTO: CustomerDTO,
+                       @PathVariable("id") id: Int): CustomerDTO {
         return customerService.updateCustomer(id, customerDTO)
     }
 
@@ -35,6 +36,15 @@ class CustomerController(val customerService: CustomerService){
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteCustomer(@PathVariable("id") id: Int) {
         return customerService.deleteCustomer(id)
+    }
+
+    @PutMapping("/{customerId}/{tabletopId}/{tabletopCode}")
+    fun addCustomerToTabletop(
+        @PathVariable tabletopId: Int,
+        @PathVariable customerId: Int,
+        @PathVariable tabletopCode: String
+    ): Boolean {
+        return customerService.addCustomerToTabletop(customerId, tabletopId, tabletopCode)
     }
 
 //    @RequestMapping(path = ["/delete_customer/{customerId}"], method = [RequestMethod.GET])

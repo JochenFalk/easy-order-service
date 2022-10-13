@@ -1,16 +1,14 @@
 package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.EmployeeDTO
-import com.easysystems.easyorderservice.data.TabletopDTO
 import com.easysystems.easyorderservice.entities.Employee
-import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.exceptions.EmployeeNotFoundException
 import com.easysystems.easyorderservice.repositories.EmployeeRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
 
 @Service
-class EmployeeService(val employeeRepository: EmployeeRepository) {
+class EmployeeService(val employeeRepository: EmployeeRepository, val authenticationService: AuthenticationService) {
 
     companion object : KLogging()
 
@@ -25,7 +23,7 @@ class EmployeeService(val employeeRepository: EmployeeRepository) {
         logger.info("New employee created: $employee")
 
         return employee.let {
-            EmployeeDTO(it.id, it.name, it.password, it.tabletops as ArrayList<TabletopDTO>)
+            EmployeeDTO(it.id, it.name, it.password, it.tabletops)
         }
     }
 
@@ -35,7 +33,7 @@ class EmployeeService(val employeeRepository: EmployeeRepository) {
 
         return if (employee.isPresent) {
             employee.get().let {
-                EmployeeDTO(it.id, it.name, it.password, it.tabletops as ArrayList<TabletopDTO>)
+                EmployeeDTO(it.id, it.name, it.password, it.tabletops)
             }
         } else {
             throw EmployeeNotFoundException("No employee found for given id: $id")
@@ -46,7 +44,7 @@ class EmployeeService(val employeeRepository: EmployeeRepository) {
 
         return employeeRepository.findAll()
             .map {
-                EmployeeDTO(it.id, it.name, it.password, it.tabletops as ArrayList<TabletopDTO>)
+                EmployeeDTO(it.id, it.name, it.password, it.tabletops)
             } as ArrayList<EmployeeDTO>
     }
 
@@ -55,13 +53,14 @@ class EmployeeService(val employeeRepository: EmployeeRepository) {
         val employee = employeeRepository.findById(id)
 
         return if (employee.isPresent) {
+
             employee.get().let {
                 it.name = employeeDTO.name
                 it.password = employeeDTO.password
-                it.tabletops = employeeDTO.tabletopsDTO as ArrayList<Tabletop>
+                it.tabletops = employeeDTO.tabletopsDTO
                 employeeRepository.save(it)
 
-                EmployeeDTO(it.id, it.name, it.password, it.tabletops as ArrayList<TabletopDTO>)
+                EmployeeDTO(it.id, it.name, it.password, it.tabletops)
             }
         } else {
             throw EmployeeNotFoundException("No employee found for given id: $id")
@@ -72,13 +71,37 @@ class EmployeeService(val employeeRepository: EmployeeRepository) {
 
         val employee = employeeRepository.findById(id)
 
-        if (employee.isPresent)
-        {
+        if (employee.isPresent) {
+
             employee.get().let {
                 employeeRepository.deleteById(id)
             }
         } else {
             throw EmployeeNotFoundException("No employee found for given id: $id")
+        }
+    }
+
+    fun assignEmployeeToTabletop(tabletopId: Int, employeeId: Int, name: String, password: String): Boolean {
+
+        val employee = employeeRepository.findById(employeeId)
+
+        if (employee.isPresent) {
+
+            employee.get().let {
+
+                if (authenticationService.employee(employeeId, name, password)) {
+                    it.tabletops.add(tabletopId)
+                    employeeRepository.save(it)
+
+                    logger.info("Table $tabletopId is assigned to ${it.name}")
+                    return true
+                } else {
+                    logger.info("Table $tabletopId is not assigned! Authentication for employee ${it.name} failed")
+                    return false
+                }
+            }
+        } else {
+            throw EmployeeNotFoundException("No employee found for given id: $employeeId")
         }
     }
 }
