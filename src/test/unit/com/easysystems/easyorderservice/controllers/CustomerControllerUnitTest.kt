@@ -48,9 +48,29 @@ internal class CustomerControllerUnitTest {
     }
 
     @Test
+    fun createCustomer_RuntimeException() {
+
+        val customerDTO = CustomerDTO(1, name = "Jack")
+        val message = "Test runtime error handler"
+
+        every { customerServiceMockk.createCustomer(any()) } throws RuntimeException(message)
+
+        val result = webTestClient.post()
+            .uri("/v1/customers")
+            .bodyValue(customerDTO)
+            .exchange()
+            .expectStatus().is5xxServerError
+            .expectBody(String::class.java)
+            .returnResult()
+            .responseBody
+
+        Assertions.assertEquals(message, result)
+    }
+
+    @Test
     fun retrieveCustomerById() {
 
-        val customer = CustomerDTO(1, "Tom", 0, ArrayList())
+        val customer = CustomerDTO(1, "Tom")
 
         every { customerServiceMockk.retrieveCustomerById(any()) } returns (customer)
 
@@ -95,7 +115,7 @@ internal class CustomerControllerUnitTest {
     @Test
     fun updateCustomer() {
 
-        val customerDTO = CustomerDTO(1, "Tom", 1, ArrayList())
+        val customerDTO = CustomerDTO(1, "Tom")
 
         every { customerServiceMockk.updateCustomer(any(), any()) } returns (customerDTO)
 
@@ -109,7 +129,7 @@ internal class CustomerControllerUnitTest {
             .responseBody
 
         CustomerControllerIntgTest.logger.info("Test result: $result")
-        Assertions.assertEquals(customerDTO.tableId, result!!.tableId)
+        Assertions.assertEquals(customerDTO.name, result!!.name)
     }
 
     @Test
@@ -122,39 +142,21 @@ internal class CustomerControllerUnitTest {
             .exchange()
             .expectStatus().isNoContent
     }
-
-    @Test
-    fun addCustomerToTabletop() {
-
-        every { customerServiceMockk.addCustomerToTabletop(any(), any(), any()) } returns (true)
-
-        val result = webTestClient.put()
-            .uri("/v1/customers//{customerId}/{tabletopId}/{tabletopCode}", 1, 2, "Code2")
-            .exchange()
-            .expectStatus().isOk
-            .expectBody(Boolean::class.java)
-            .returnResult()
-            .responseBody
-
-        CustomerControllerIntgTest.logger.info("Test result: $result")
-        Assertions.assertEquals(true, result!!)
-    }
+}
 
 //    @Test
-//    fun deleteCustomerTest() {
+//    fun addCustomerToTabletop() {
 //
-//        val id = 1
-//        val expected = true
+//        every { customerServiceMockk.addCustomerToTabletop(any(), any(), any()) } returns (true)
 //
-//        every { customerControllerMockk.deleteCustomer(any()) } returns (expected)
-//
-//        val result = webTestClient.get()
-//            .uri("/v1/customers/delete_customer/{customerId}", id)
+//        val result = webTestClient.put()
+//            .uri("/v1/customers//{customerId}/{tabletopId}/{tabletopCode}", 1, 2, "Code2")
 //            .exchange()
-//            .expectStatus().is2xxSuccessful
-//            .expectBody(String::class.java)
+//            .expectStatus().isOk
+//            .expectBody(Boolean::class.java)
 //            .returnResult()
+//            .responseBody
 //
-//        Assertions.assertEquals(expected.toString(), result.responseBody)
+//        CustomerControllerIntgTest.logger.info("Test result: $result")
+//        Assertions.assertEquals(true, result!!)
 //    }
-}

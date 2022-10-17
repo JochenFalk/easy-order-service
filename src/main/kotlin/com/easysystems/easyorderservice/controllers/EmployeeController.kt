@@ -4,15 +4,18 @@ import com.easysystems.easyorderservice.data.EmployeeDTO
 import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.services.EmployeeService
 import org.springframework.http.HttpStatus
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/v1/employees")
+@Validated
 class EmployeeController(val employeeService: EmployeeService ) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createEmployee(@RequestBody employeeDTO: EmployeeDTO) : EmployeeDTO {
+    fun createEmployee(@RequestBody @Valid employeeDTO: EmployeeDTO) : EmployeeDTO {
 
         return employeeService.createEmployee(employeeDTO)
     }
@@ -28,7 +31,7 @@ class EmployeeController(val employeeService: EmployeeService ) {
     }
 
     @PutMapping("/{id}")
-    fun updateEmployee(@RequestBody employeeDTO: EmployeeDTO, @PathVariable("id") id: Int): EmployeeDTO {
+    fun updateEmployee(@RequestBody @Valid employeeDTO: EmployeeDTO, @PathVariable("id") id: Int): EmployeeDTO {
         return employeeService.updateEmployee(id, employeeDTO)
     }
 
@@ -38,11 +41,11 @@ class EmployeeController(val employeeService: EmployeeService ) {
         return employeeService.deleteEmployee(id)
     }
 
-    @PutMapping("/{tabletopId}/{employeeId}/{name}/{password}")
-    fun assignEmployeeToTabletop(@PathVariable tabletopId: Int,
-                                 @PathVariable employeeId: Int,
-                                 @PathVariable name: String,
-                                 @PathVariable password: String): Boolean {
-        return employeeService.assignEmployeeToTabletop(tabletopId, employeeId, name, password)
-    }
+//    @PutMapping("/{tabletopId}/{employeeId}/{name}/{password}")
+//    fun assignEmployeeToTabletop(@PathVariable tabletopId: Int,
+//                                 @PathVariable employeeId: Int,
+//                                 @PathVariable name: String,
+//                                 @PathVariable password: String): Boolean {
+//        return employeeService.assignEmployeeToTabletop(tabletopId, employeeId, name, password)
+//    }
 }

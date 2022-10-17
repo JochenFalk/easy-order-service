@@ -6,6 +6,8 @@ import com.easysystems.easyorderservice.exceptions.ItemNotFoundException
 import com.easysystems.easyorderservice.repositories.ItemRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
+import java.util.*
+import kotlin.collections.ArrayList
 
 @Service
 class ItemService(val itemRepository: ItemRepository) {
@@ -28,6 +30,19 @@ class ItemService(val itemRepository: ItemRepository) {
         }
     }
 
+    fun createItemsByList(itemList: ArrayList<ItemDTO>): ArrayList<ItemDTO> {
+
+        val createdItems = ArrayList<ItemDTO>()
+
+        itemList.forEach { outer ->
+            createItem(outer).let { inner ->
+                createdItems.add(inner)
+            }
+        }
+
+        return createdItems
+    }
+
     fun retrieveItemById(id: Int): ItemDTO {
 
         val item = itemRepository.findById(id)
@@ -43,9 +58,17 @@ class ItemService(val itemRepository: ItemRepository) {
         }
     }
 
-    fun retrieveAllItems(): ArrayList<ItemDTO> {
+    fun retrieveOptionalItemById(id: Int): Optional<Item> {
+        return itemRepository.findById(id)
+    }
 
-        return itemRepository.findAll()
+    fun retrieveAllItems(categoryFilter: String?): ArrayList<ItemDTO> {
+
+        val result = categoryFilter?.let {
+            itemRepository.findByCategory(categoryFilter)
+        } ?: itemRepository.findAll()
+
+        return result
             .map {
                 val category = ItemDTO.Category.valueOf(it.category)
                 ItemDTO(it.id, it.name, category, it.price)

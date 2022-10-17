@@ -8,7 +8,5 @@ data class Customer (
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     override val id: Int?,
-    override var name: String,
-    var tableId: Int=0,
-    var items: ArrayList<Int> = ArrayList()
+    override var name: String
 ) : User(id, name)

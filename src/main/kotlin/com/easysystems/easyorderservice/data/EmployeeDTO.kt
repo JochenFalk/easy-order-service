@@ -1,17 +1,11 @@
 package com.easysystems.easyorderservice.data
 
-import mu.KLogging
+import javax.validation.constraints.NotBlank
 
-data class EmployeeDTO (
-    override var id: Int?=0,
+data class EmployeeDTO(
+    override var id: Int? = 0,
+    @get:NotBlank(message = "Property 'name' cannot be blank")
     override var name: String,
-    var password: String,
-    var tabletopsDTO: ArrayList<Int> = ArrayList()
-) : UserDTO(id, name) {
-
-    companion object : KLogging()
-
-    init {
-        logger.info("Employee created with ID: $id and Name: $name")
-    }
-}
+    @get:NotBlank(message = "Property 'password' cannot be blank")
+    var password: String
+) : UserDTO(id, name)

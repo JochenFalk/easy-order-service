@@ -9,6 +9,5 @@ data class Employee(
     @GeneratedValue(strategy = GenerationType.AUTO)
     override val id: Int?,
     override var name: String,
-    var password: String,
-    var tabletops: ArrayList<Int> = ArrayList()
+    var password: String
 ) : User(id, name)

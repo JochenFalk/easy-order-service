@@ -28,7 +28,7 @@ class CustomerService(val customerRepository: CustomerRepository, val authentica
         logger.info("New customer created: $customer")
 
         return customer.let {
-            CustomerDTO(it.id, it.name, it.tableId, it.items)
+            CustomerDTO(it.id, it.name)
         }
     }
 
@@ -38,7 +38,7 @@ class CustomerService(val customerRepository: CustomerRepository, val authentica
 
         return if (customer.isPresent) {
             customer.get().let {
-                CustomerDTO(it.id, it.name, it.tableId, it.items)
+                CustomerDTO(it.id, it.name)
             }
         } else {
             throw CustomerNotFoundException("No customer found for given id: $id")
@@ -49,7 +49,7 @@ class CustomerService(val customerRepository: CustomerRepository, val authentica
 
         return customerRepository.findAll()
             .map {
-                CustomerDTO(it.id, it.name, it.tableId, it.items)
+                CustomerDTO(it.id, it.name)
             } as ArrayList<CustomerDTO>
     }
 
@@ -60,11 +60,9 @@ class CustomerService(val customerRepository: CustomerRepository, val authentica
         return if (customer.isPresent) {
             customer.get().let {
                 it.name = customerDTO.name
-                it.tableId = customerDTO.tableId
-                it.items = customerDTO.items
                 customerRepository.save(it)
 
-                CustomerDTO(it.id, it.name, it.tableId, it.items)
+                CustomerDTO(it.id, it.name)
             }
         } else {
             throw CustomerNotFoundException("No customer found for given id: $id")
@@ -84,28 +82,28 @@ class CustomerService(val customerRepository: CustomerRepository, val authentica
         }
     }
 
-    fun addCustomerToTabletop(customerId: Int, tabletopId: Int, tabletopCode: String): Boolean {
-
-        val customer = customerRepository.findById(customerId)
-
-        if (customer.isPresent) {
-
-            customer.get().let {
-
-                if (authenticationService.tabletop(tabletopId, tabletopCode)) {
-
-                    it.tableId = tabletopId
-                    customerRepository.save(it)
-
-                    logger.info("Customer ${it.name} is added to table $tabletopId")
-                    return true
-                } else {
-                    logger.info("Customer ${it.name} was not added! Authentication for table $tabletopId failed")
-                    return false
-                }
-            }
-        } else {
-            throw CustomerNotFoundException("No customer found for given id: $customerId")
-        }
-    }
+//    fun addCustomerToTabletop(customerId: Int, tabletopId: Int, tabletopCode: String): Boolean {
+//
+//        val customer = customerRepository.findById(customerId)
+//
+//        if (customer.isPresent) {
+//
+//            customer.get().let {
+//
+//                if (authenticationService.tabletop(tabletopId, tabletopCode)) {
+//
+//                    it.tableId = tabletopId
+//                    customerRepository.save(it)
+//
+//                    logger.info("Customer ${it.name} is added to table $tabletopId")
+//                    return true
+//                } else {
+//                    logger.info("Customer ${it.name} was not added! Authentication for table $tabletopId failed")
+//                    return false
+//                }
+//            }
+//        } else {
+//            throw CustomerNotFoundException("No customer found for given id: $customerId")
+//        }
+//    }
 }

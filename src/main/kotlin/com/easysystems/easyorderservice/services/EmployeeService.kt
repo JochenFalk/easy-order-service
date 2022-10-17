@@ -23,7 +23,7 @@ class EmployeeService(val employeeRepository: EmployeeRepository, val authentica
         logger.info("New employee created: $employee")
 
         return employee.let {
-            EmployeeDTO(it.id, it.name, it.password, it.tabletops)
+            EmployeeDTO(it.id, it.name, it.password)
         }
     }
 
@@ -33,7 +33,7 @@ class EmployeeService(val employeeRepository: EmployeeRepository, val authentica
 
         return if (employee.isPresent) {
             employee.get().let {
-                EmployeeDTO(it.id, it.name, it.password, it.tabletops)
+                EmployeeDTO(it.id, it.name, it.password)
             }
         } else {
             throw EmployeeNotFoundException("No employee found for given id: $id")
@@ -44,7 +44,7 @@ class EmployeeService(val employeeRepository: EmployeeRepository, val authentica
 
         return employeeRepository.findAll()
             .map {
-                EmployeeDTO(it.id, it.name, it.password, it.tabletops)
+                EmployeeDTO(it.id, it.name, it.password)
             } as ArrayList<EmployeeDTO>
     }
 
@@ -57,10 +57,9 @@ class EmployeeService(val employeeRepository: EmployeeRepository, val authentica
             employee.get().let {
                 it.name = employeeDTO.name
                 it.password = employeeDTO.password
-                it.tabletops = employeeDTO.tabletopsDTO
                 employeeRepository.save(it)
 
-                EmployeeDTO(it.id, it.name, it.password, it.tabletops)
+                EmployeeDTO(it.id, it.name, it.password)
             }
         } else {
             throw EmployeeNotFoundException("No employee found for given id: $id")
@@ -81,27 +80,27 @@ class EmployeeService(val employeeRepository: EmployeeRepository, val authentica
         }
     }
 
-    fun assignEmployeeToTabletop(tabletopId: Int, employeeId: Int, name: String, password: String): Boolean {
-
-        val employee = employeeRepository.findById(employeeId)
-
-        if (employee.isPresent) {
-
-            employee.get().let {
-
-                if (authenticationService.employee(employeeId, name, password)) {
-                    it.tabletops.add(tabletopId)
-                    employeeRepository.save(it)
-
-                    logger.info("Table $tabletopId is assigned to ${it.name}")
-                    return true
-                } else {
-                    logger.info("Table $tabletopId is not assigned! Authentication for employee ${it.name} failed")
-                    return false
-                }
-            }
-        } else {
-            throw EmployeeNotFoundException("No employee found for given id: $employeeId")
-        }
-    }
+//    fun assignEmployeeToTabletop(tabletopId: Int, employeeId: Int, name: String, password: String): Boolean {
+//
+//        val employee = employeeRepository.findById(employeeId)
+//
+//        if (employee.isPresent) {
+//
+//            employee.get().let {
+//
+//                if (authenticationService.employee(employeeId, name, password)) {
+//                    it.tabletops.add(tabletopId)
+//                    employeeRepository.save(it)
+//
+//                    logger.info("Table $tabletopId is assigned to ${it.name}")
+//                    return true
+//                } else {
+//                    logger.info("Table $tabletopId is not assigned! Authentication for employee ${it.name} failed")
+//                    return false
+//                }
+//            }
+//        } else {
+//            throw EmployeeNotFoundException("No employee found for given id: $employeeId")
+//        }
+//    }
 }

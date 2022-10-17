@@ -1,18 +1,20 @@
 package com.easysystems.easyorderservice.controllers
 
-import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.data.OrderDTO
 import com.easysystems.easyorderservice.services.OrderService
 import org.springframework.http.HttpStatus
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/v1/orders")
-class OrdersController(val orderService: OrderService) {
+@Validated
+class OrderController(val orderService: OrderService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createOrder(@RequestBody orderDTO: OrderDTO): OrderDTO {
+    fun createOrder(@RequestBody @Valid orderDTO: OrderDTO): OrderDTO {
         return orderService.createOrder(orderDTO)
     }
 
@@ -27,7 +29,7 @@ class OrdersController(val orderService: OrderService) {
     }
 
     @PutMapping("/{id}")
-    fun updateOrder(@RequestBody orderDTO: OrderDTO, @PathVariable("id") id: Int): OrderDTO {
+    fun updateOrder(@RequestBody @Valid orderDTO: OrderDTO, @PathVariable("id") id: Int): OrderDTO {
         return orderService.updateOrder(id, orderDTO)
     }
 

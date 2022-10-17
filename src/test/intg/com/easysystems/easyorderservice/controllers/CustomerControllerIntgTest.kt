@@ -30,10 +30,7 @@ class CustomerControllerIntgTest {
     @Autowired
     lateinit var customerRepository: CustomerRepository
 
-    @Autowired
-    lateinit var tabletopRepository: TabletopRepository
-
-    @AfterEach
+    @BeforeEach
     fun setUp() {
         customerRepository.deleteAll()
     }
@@ -60,7 +57,7 @@ class CustomerControllerIntgTest {
     @Test
     fun retrieveCustomerById() {
 
-        val customer = Customer(1, "Tom", 0, ArrayList()).apply {
+        val customer = Customer(null, "Tom").apply {
             customerRepository.save(this)
         }
 
@@ -101,10 +98,10 @@ class CustomerControllerIntgTest {
     @Test
     fun updateCustomer() {
 
-        val customer = Customer(1, "Tom", 0, ArrayList()).apply {
+        val customer = Customer(null, "Tom").apply {
             customerRepository.save(this)
         }
-        val updatedCustomerDTO = CustomerDTO(1, "Tom", 1, ArrayList())
+        val updatedCustomerDTO = CustomerDTO(1, "Jerry")
 
         val result = webTestClient.put()
             .uri("/v1/customers/{id}", customer.id)
@@ -116,13 +113,13 @@ class CustomerControllerIntgTest {
             .responseBody
 
         logger.info("Test result: $result")
-        Assertions.assertEquals(updatedCustomerDTO.tableId, result!!.tableId)
+        Assertions.assertEquals(updatedCustomerDTO.name, result!!.name)
     }
 
     @Test
     fun deleteCustomer() {
 
-        val customer = Customer(1, "Tom", 0, ArrayList()).apply {
+        val customer = Customer(1, "Tom").apply {
             customerRepository.save(this)
         }
 
@@ -143,42 +140,25 @@ class CustomerControllerIntgTest {
         Assertions.assertEquals(0, result!!.size)
     }
 
-    @Test
-    fun addCustomerToTabletop() {
-
-        val customer = Customer(null, "Tom", 0, ArrayList()).apply {
-            customerRepository.save(this)
-        }
-        val tabletop = Tabletop(null, "Code1", arrayListOf(1,1,1)).apply {
-            tabletopRepository.save(this)
-        }
-
-        val result = webTestClient.put()
-            .uri("/v1/customers//{customerId}/{tabletopId}/{tabletopCode}", customer.id, tabletop.id, tabletop.code)
-            .exchange()
-            .expectStatus().isOk
-            .expectBody(Boolean::class.java)
-            .returnResult()
-            .responseBody
-
-        logger.info("Test result: $result")
-        Assertions.assertEquals(true, result!!)
-    }
-
 //    @Test
-//    fun deleteCustomerTest() {
+//    fun addCustomerToTabletop() {
 //
-//        val id = 10
-//        val customerDTO = CustomerDTO(id = id, name = "Jerry") // Create object to delete
-//        val expected = "true"
+//        val customer = Customer(null, "Tom", 0, ArrayList()).apply {
+//            customerRepository.save(this)
+//        }
+//        val tabletop = Tabletop(null, "Code1", arrayListOf(1,1,1)).apply {
+//            tabletopRepository.save(this)
+//        }
 //
-//        val result = webTestClient.get()
-//            .uri("/v1/customers/delete_customer/{customerId}", id)
+//        val result = webTestClient.put()
+//            .uri("/v1/customers//{customerId}/{tabletopId}/{tabletopCode}", customer.id, tabletop.id, tabletop.authCode)
 //            .exchange()
-//            .expectStatus().is2xxSuccessful
-//            .expectBody(String::class.java)
+//            .expectStatus().isOk
+//            .expectBody(Boolean::class.java)
 //            .returnResult()
+//            .responseBody
 //
-//        Assertions.assertEquals(expected, result.responseBody)
+//        logger.info("Test result: $result")
+//        Assertions.assertEquals(true, result!!)
 //    }
 }

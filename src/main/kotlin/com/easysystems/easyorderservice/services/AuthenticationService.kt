@@ -1,7 +1,6 @@
 package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.EmployeeDTO
-import com.easysystems.easyorderservice.data.OrderDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
 import com.easysystems.easyorderservice.exceptions.EmployeeNotFoundException
 import com.easysystems.easyorderservice.exceptions.TabletopNotFoundException
@@ -25,7 +24,7 @@ class AuthenticationService(
         if (employee.isPresent) {
             employee.get().let {
 
-                val employeeDTO = EmployeeDTO(it.id, it.name, it.password, it.tabletops)
+                val employeeDTO = EmployeeDTO(it.id, it.name, it.password)
 
                 return if (employeeDTO.name == name && employeeDTO.password == password) {
                     log.logger.info("Employee $name is authenticated")
@@ -47,9 +46,9 @@ class AuthenticationService(
         if (tabletop.isPresent) {
             tabletop.get().let {
 
-                val tabletopDTO = TabletopDTO(it.id, it.code, it.orders)
+                val tabletopDTO = TabletopDTO(it.id, it.authCode)
 
-                return if (tabletopDTO.code == tabletopCode) {
+                return if (tabletopDTO.authCode == tabletopCode) {
                     log.logger.info("Table $tabletopId is authenticated by customer")
                     true
                 } else {
