@@ -1,4 +1,4 @@
 spring:
   application:
     name: easy-order-service
-message: Add stuff to delete customer!
+message: This is a message

@@ -12,10 +12,16 @@ import javax.validation.Valid
 @Validated
 class TabletopController(val tabletopService: TabletopService) {
 
+//    @PostMapping
+//    @ResponseStatus(HttpStatus.CREATED)
+//    fun createTabletop(@RequestBody @Valid tabletopDTO: TabletopDTO) : TabletopDTO {
+//        return tabletopService.createTabletop(tabletopDTO)
+//    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createTabletop(@RequestBody @Valid tabletopDTO: TabletopDTO) : TabletopDTO {
-        return tabletopService.createTabletop(tabletopDTO)
+    fun createTabletop(@RequestBody @Valid tabletopList: ArrayList<TabletopDTO>) : ArrayList<TabletopDTO> {
+        return tabletopService.createTabletopsByList(tabletopList)
     }
 
     @GetMapping("/{id}")

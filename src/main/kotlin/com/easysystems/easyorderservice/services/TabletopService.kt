@@ -1,5 +1,6 @@
 package com.easysystems.easyorderservice.services
 
+import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
 import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.exceptions.TabletopNotFoundException
@@ -26,6 +27,19 @@ class TabletopService(val tabletopRepository: TabletopRepository) {
         return tabletop.let {
             TabletopDTO(it.id, it.authCode)
         }
+    }
+
+    fun createTabletopsByList(tabletopList: ArrayList<TabletopDTO>): ArrayList<TabletopDTO> {
+
+        val createdTabletops = ArrayList<TabletopDTO>()
+
+        tabletopList.forEach { outer ->
+            createTabletop(outer).let { inner ->
+                createdTabletops.add(inner)
+            }
+        }
+
+        return createdTabletops
     }
 
     fun retrieveTabletopById(id: Int): TabletopDTO {
