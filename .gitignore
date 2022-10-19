@@ -103,5 +103,7 @@ fabric.properties
 
 # More stuff that keeps popping up
 .gradle/*
+.gradle\*
 *.lock
 build/*
+build\*
