@@ -4,10 +4,15 @@ import javax.validation.constraints.NotNull
 
 class OrderDTO (
     var id: Int? = 0,
-    @get:NotNull(message = "Property 'itemId' cannot be null")
-    var itemId: Int? = null,
-    @get:NotNull(message = "Property 'tableId' cannot be null")
-    var tabletopId: Int? = null,
+    var status: Status? = Status.OPENED,
+    var items: ArrayList<ItemDTO>? = ArrayList(),
+    @get:NotNull(message = "Property 'total' cannot be null")
+    var total: Double? = 0.0,
     @get:NotNull(message = "Property 'sessionId' cannot be null")
-    val sessionId: Int? = null
-)
+    val sessionId : Int? = null
+) {
+    enum class Status {
+        OPENED,
+        SENT
+    }
+}

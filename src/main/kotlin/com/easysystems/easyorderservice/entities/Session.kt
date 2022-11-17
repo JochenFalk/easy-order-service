@@ -8,11 +8,14 @@ data class Session(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Int?,
-    var status: String,
+    var status: String? = "",
+    @OneToOne
+    @JoinColumn(name = "TABLETOP_ID")
+    var tabletop: Tabletop? = null,
+    var total: Double? = 0.0,
     @OneToMany(
         mappedBy = "session",
         cascade = [CascadeType.ALL],
-        orphanRemoval = true
-    )
-    var orders: List<Order> = mutableListOf()
+        orphanRemoval = true)
+    var orders: List<Order>? = mutableListOf()
 )

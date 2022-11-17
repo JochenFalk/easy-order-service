@@ -8,17 +8,14 @@ data class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Int?,
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ITEM_ID", nullable = false)
-    var item: Item? = null,
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "TABLETOP_ID", nullable = false)
-    var tabletop: Tabletop? = null,
+    var status: String? = "",
+    var items: ArrayList<Int>? = ArrayList(),
+    var total: Double? = 0.0,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "SESSION_ID", nullable = false)
-    var session: Session? = null
+    val session: Session? = null
 ) {
     override fun toString(): String {
-        return "Order(id:$id, itemId:${item!!.id}, tabletop: ${tabletop!!.id} session:${session!!.id})"
+        return "Order(id:$id, status:$status, items: $items, total: $total, session: ${session?.id})"
     }
 }

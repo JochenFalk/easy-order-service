@@ -10,5 +10,5 @@ data class Item(
     val id: Int?,
     var name: String,
     var category: String,
-    var price: Float
+    var price: Double,
 )

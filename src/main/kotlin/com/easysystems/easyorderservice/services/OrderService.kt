@@ -1,43 +1,42 @@
 package com.easysystems.easyorderservice.services
 
+import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.data.OrderDTO
+import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.entities.Order
 import com.easysystems.easyorderservice.exceptions.*
 import com.easysystems.easyorderservice.repositories.OrderRepository
+import com.easysystems.easyorderservice.repositories.SessionRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
+import kotlin.collections.ArrayList
 
 @Service
 class OrderService(val orderRepository: OrderRepository,
-                   val itemService: ItemService,
-                   val tabletopService: TabletopService,
-                   val sessionService: SessionService) {
+                   val sessionRepository: SessionRepository,
+                   val itemService: ItemService) {
 
     companion object : KLogging()
 
     fun createOrder(orderDTO: OrderDTO): OrderDTO {
 
-        val item = itemService.retrieveOptionalItemById(orderDTO.itemId!!)
-        val tabletop = tabletopService.retrieveOptionalTabletopById(orderDTO.tabletopId!!)
-        val session = sessionService.retrieveOptionalSessionById(orderDTO.sessionId!!)
+        // Using repo instead of service to circumvent circular reference warning between session-
+        // and order-service
+        val sessionOptional = sessionRepository.findById(orderDTO.sessionId!!)
 
-        if (!item.isPresent)
-        {
-            throw ItemNotValidException("Item not valid for given id: ${orderDTO.itemId}")
-        }
-
-        if (!tabletop.isPresent)
-        {
-            throw TabletopNotValidException("Table not valid for given id: ${orderDTO.tabletopId}")
-        }
-
-        if (!session.isPresent)
-        {
-            throw SessionNotValidException("Session not valid for given id: ${orderDTO.sessionId}")
+        if(!sessionOptional.isPresent){
+            throw SessionNotValidException("Session is not valid for given id: ${orderDTO.sessionId}")
         }
 
         val order = orderDTO.let {
-            Order(null, item.get(), tabletop.get(), session.get())
+
+            val itemsAsListOfId = ArrayList<Int>()
+
+            for (i in it.items!!) {
+                itemsAsListOfId.add(i.id!!)
+            }
+
+            Order(null, it.status.toString(), itemsAsListOfId, it.total!!, sessionOptional.get())
         }
 
         orderRepository.save(order)
@@ -45,7 +44,14 @@ class OrderService(val orderRepository: OrderRepository,
         logger.info("New order created: $order")
 
         return order.let {
-            OrderDTO(it.id, it.item!!.id, it.tabletop!!.id, it.session!!.id)
+
+            val itemsAsDTO = ArrayList<ItemDTO>()
+
+            for (i in it.items!!) {
+                itemsAsDTO.add(itemService.retrieveItemById(i))
+            }
+
+            OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), itemsAsDTO, it.total, it.session!!.id)
         }
     }
 
@@ -53,10 +59,16 @@ class OrderService(val orderRepository: OrderRepository,
 
         val order = orderRepository.findById(id)
 
-        return if (order.isPresent)
-        {
+        return if (order.isPresent) {
             order.get().let {
-                OrderDTO(it.id, it.item!!.id, it.tabletop!!.id, it.session!!.id)
+
+                val itemsAsDTO = ArrayList<ItemDTO>()
+
+                for (i in it.items!!) {
+                    itemsAsDTO.add(itemService.retrieveItemById(i))
+                }
+
+                OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), itemsAsDTO, it.total, it.session!!.id)
             }
         } else {
             throw OrderNotFoundException("No order found for given id: $id")
@@ -67,7 +79,15 @@ class OrderService(val orderRepository: OrderRepository,
 
         return orderRepository.findAll()
             .map {
-                OrderDTO(it.id, it.item!!.id, it.tabletop!!.id, it.session!!.id)
+
+                val itemsAsDTO = ArrayList<ItemDTO>()
+
+                for (i in it.items!!) {
+                    itemsAsDTO.add(itemService.retrieveItemById(i))
+                }
+
+                OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), itemsAsDTO, it.total, it.session!!.id)
+
             } as ArrayList<OrderDTO>
     }
 
@@ -75,34 +95,22 @@ class OrderService(val orderRepository: OrderRepository,
 
         val order = orderRepository.findById(id)
 
-        return if(order.isPresent)
-        {
-            val item = itemService.retrieveOptionalItemById(orderDTO.itemId!!)
-            val tabletop = tabletopService.retrieveOptionalTabletopById(orderDTO.tabletopId!!)
-            val session = sessionService.retrieveOptionalSessionById(orderDTO.sessionId!!)
-
-            if (!item.isPresent)
-            {
-                throw ItemNotValidException("Item not valid for given id: ${orderDTO.itemId}")
-            }
-
-            if (!tabletop.isPresent)
-            {
-                throw TabletopNotValidException("Table not valid for given id: ${orderDTO.tabletopId}")
-            }
-
-            if (!session.isPresent)
-            {
-                throw SessionNotValidException("Session not valid for given id: ${orderDTO.sessionId}")
-            }
-
+        return if (order.isPresent) {
             order.get().let {
-                it.item = item.get()
-                it.tabletop = tabletop.get()
-                it.session = session.get()
+
+                val itemsAsListOfId = ArrayList<Int>()
+
+                for (i in orderDTO.items!!) {
+                    itemsAsListOfId.add(i.id!!)
+                }
+
+                it.status = orderDTO.status.toString()
+                it.items = itemsAsListOfId
+                it.total = orderDTO.total
+
                 orderRepository.save(it)
 
-                OrderDTO(it.id, item.get().id, tabletop.get().id, session.get().id)
+                OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), orderDTO.items, it.total, it.session!!.id)
             }
         } else {
             throw OrderNotFoundException("No order found for given id: $id")
@@ -113,8 +121,7 @@ class OrderService(val orderRepository: OrderRepository,
 
         val order = orderRepository.findById(id)
 
-        if(order.isPresent)
-        {
+        if (order.isPresent) {
             order.get().let {
                 orderRepository.deleteById(id)
             }

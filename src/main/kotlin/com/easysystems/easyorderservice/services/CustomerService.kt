@@ -2,7 +2,6 @@ package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.*
 import com.easysystems.easyorderservice.entities.Customer
-import com.easysystems.easyorderservice.entities.Item
 import com.easysystems.easyorderservice.exceptions.CustomerNotFoundException
 import com.easysystems.easyorderservice.repositories.CustomerRepository
 import mu.KLogging
@@ -19,9 +18,7 @@ class CustomerService(val customerRepository: CustomerRepository, val authentica
 
     fun createCustomer(customerDTO: CustomerDTO): CustomerDTO {
 
-        val customer = customerDTO.let {
-            Customer(null, it.name)
-        }
+        val customer = Customer(null, customerDTO.name)
 
         customerRepository.save(customer)
 

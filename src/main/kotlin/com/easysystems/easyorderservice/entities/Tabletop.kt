@@ -8,5 +8,5 @@ data class Tabletop (
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Int?,
-    var authCode: String,
+    var authCode: String
 )

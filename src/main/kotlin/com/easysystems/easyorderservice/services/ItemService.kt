@@ -6,7 +6,6 @@ import com.easysystems.easyorderservice.exceptions.ItemNotFoundException
 import com.easysystems.easyorderservice.repositories.ItemRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
-import java.util.*
 import kotlin.collections.ArrayList
 
 @Service
@@ -56,10 +55,6 @@ class ItemService(val itemRepository: ItemRepository) {
         } else {
             throw ItemNotFoundException("No item found for given id: $id")
         }
-    }
-
-    fun retrieveOptionalItemById(id: Int): Optional<Item> {
-        return itemRepository.findById(id)
     }
 
     fun retrieveAllItems(categoryFilter: String?): ArrayList<ItemDTO> {

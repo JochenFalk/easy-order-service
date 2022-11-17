@@ -1,7 +1,6 @@
 package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.EmployeeDTO
-import com.easysystems.easyorderservice.data.TabletopDTO
 import com.easysystems.easyorderservice.exceptions.EmployeeNotFoundException
 import com.easysystems.easyorderservice.exceptions.TabletopNotFoundException
 import com.easysystems.easyorderservice.repositories.EmployeeRepository
@@ -17,7 +16,7 @@ class AuthenticationService(
 
     private val log = KLogging()
 
-    fun employee(employeeId: Int, name: String, password: String): Boolean {
+    fun authenticateEmployee(employeeId: Int, name: String, password: String): Boolean {
 
         val employee = employeeRepository.findById(employeeId)
 
@@ -39,16 +38,14 @@ class AuthenticationService(
         }
     }
 
-    fun tabletop(tabletopId: Int, tabletopCode: String): Boolean {
+    fun authenticateTableCode(tabletopId: Int, tabletopCode: String): Boolean {
 
         val tabletop = tabletopRepository.findById(tabletopId)
 
         if (tabletop.isPresent) {
             tabletop.get().let {
 
-                val tabletopDTO = TabletopDTO(it.id, it.authCode)
-
-                return if (tabletopDTO.authCode == tabletopCode) {
+                return if (it.authCode == tabletopCode) {
                     log.logger.info("Table $tabletopId is authenticated by customer")
                     true
                 } else {

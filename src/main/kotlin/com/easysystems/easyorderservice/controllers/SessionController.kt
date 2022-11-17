@@ -38,4 +38,9 @@ class SessionController(val sessionService: SessionService) {
     fun deleteSession(@PathVariable("id") id: Int) {
         return sessionService.deleteSession(id)
     }
+
+    @GetMapping("/{tabletopId}/{authCode}")
+    fun verifyAndRetrieveSessionByTabletop(@PathVariable("tabletopId") tabletopId: Int, @PathVariable("authCode") authCode: String): SessionDTO? {
+        return sessionService.retrieveSessionByTabletop(tabletopId, authCode)
+    }
 }
