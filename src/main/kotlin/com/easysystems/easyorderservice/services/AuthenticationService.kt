@@ -49,7 +49,7 @@ class AuthenticationService(
                     log.logger.info("Table $tabletopId is authenticated by customer")
                     true
                 } else {
-                    log.logger.warn("Provided code is not recognized. Authentication failed")
+                    log.logger.warn("Provided code is not recognized. Authentication failed. Code: $tabletopCode")
                     false
                 }
             }
