@@ -1,6 +1,5 @@
 package com.easysystems.easyorderservice.data
 
-import com.easysystems.easyorderservice.entities.Order
 import javax.validation.constraints.NotNull
 
 data class SessionDTO(
@@ -10,7 +9,7 @@ data class SessionDTO(
     var tabletopDTO: TabletopDTO? = null,
     @get:NotNull(message = "Property 'total' cannot be null")
     var total: Double? = 0.0,
-    var orders: List<OrderDTO>? = mutableListOf()
+    var orders: ArrayList<OrderDTO>? = ArrayList()
 ) {
     enum class Status {
         OPENED,

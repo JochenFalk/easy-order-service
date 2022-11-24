@@ -16,6 +16,7 @@ data class Session(
     @OneToMany(
         mappedBy = "session",
         cascade = [CascadeType.ALL],
-        orphanRemoval = true)
-    var orders: List<Order>? = mutableListOf()
+        orphanRemoval = true
+    )
+    var orders: MutableList<Order> = mutableListOf()
 )

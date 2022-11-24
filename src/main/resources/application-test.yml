@@ -6,18 +6,18 @@ spring:
     url: jdbc:postgresql://localhost:5432/EasyOrderService
     username: postgres
     password: postgres
-#    In memory DB setup:
-#    url: jdbc:h2:mem:testdb
-#    driver-class-name: org.h2.Driver
-#    username: sa
-#    password: password
+  #    In memory DB setup:
+  #    url: jdbc:h2:mem:testdb
+  #    driver-class-name: org.h2.Driver
+  #    username: sa
+  #    password: password
   jpa:
     database: h2
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-#    database-platform: org.hibernate.dialect.H2Dialect
+    #    database-platform: org.hibernate.dialect.H2Dialect
     generate-ddl: true
-#    hibernate:
-#      dll-auto: create-drop #Disable on prod
+    #    hibernate:
+    #      dll-auto: create-drop #Disable on prod
     show-sql: false
     properties:
       hibernate:

@@ -1,6 +1,7 @@
 package com.easysystems.easyorderservice.controllers
 
 import com.easysystems.easyorderservice.data.SessionDTO
+import com.easysystems.easyorderservice.exceptionHandler.GlobalErrorHandler.Companion.logger
 import com.easysystems.easyorderservice.services.SessionService
 import org.springframework.http.HttpStatus
 import org.springframework.validation.annotation.Validated

@@ -1,6 +1,5 @@
 package com.easysystems.easyorderservice
 
-import com.easysystems.easyorderservice.services.SessionService
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 

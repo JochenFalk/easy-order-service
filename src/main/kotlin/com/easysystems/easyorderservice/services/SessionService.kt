@@ -3,7 +3,6 @@ package com.easysystems.easyorderservice.services
 import com.easysystems.easyorderservice.data.OrderDTO
 import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
-import com.easysystems.easyorderservice.entities.Order
 import com.easysystems.easyorderservice.entities.Session
 import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.exceptions.SessionNotFoundException
@@ -84,29 +83,27 @@ class SessionService(val sessionRepository: SessionRepository,
     fun updateSession(id: Int, sessionDTO: SessionDTO): SessionDTO {
 
         val session = sessionRepository.findById(id)
+        val tabletop = sessionDTO.tabletopDTO?.authCode?.let { authCode -> Tabletop(sessionDTO.tabletopDTO?.id, authCode) }
 
         return if (session.isPresent) {
             session.get().let {
 
-                val tabletop = Tabletop(sessionDTO.tabletopDTO!!.id, sessionDTO.tabletopDTO!!.authCode)
-                val orders = ArrayList<Order>()
-
-                for (o in it.orders!!) {
-                    val order = Order(o.id, o.status, o.items, o.total, o.session)
-                    orders.add(order)
-                }
-
                 it.status = sessionDTO.status.toString()
                 it.tabletop = tabletop
                 it.total = sessionDTO.total
-                it.orders = orders
+
+                if (sessionDTO.orders != null) {
+                    for (o in sessionDTO.orders!!) {
+                        orderService.updateOrder(o.id!!, o)
+                    }
+                }
 
                 sessionRepository.save(it)
 
-                val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
+                val tabletopDTO = tabletop?.id?.let { tabletopId -> tabletopService.retrieveTabletopById(tabletopId) }
                 val ordersDTO = ArrayList<OrderDTO>()
 
-                for (o in it.orders!!) {
+                for (o in it.orders) {
                     orderService.retrieveOrderById(o.id!!).let { orderDTO ->
                         ordersDTO.add(orderDTO)
                     }
