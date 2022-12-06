@@ -1,20 +1,27 @@
 package com.easysystems.easyorderservice.services
 
+import com.easysystems.easyorderservice.data.MolliePaymentDTO
 import com.easysystems.easyorderservice.data.OrderDTO
 import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
+import com.easysystems.easyorderservice.entities.MolliePayment
 import com.easysystems.easyorderservice.entities.Session
 import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.exceptions.SessionNotFoundException
+import com.easysystems.easyorderservice.repositories.MolliePaymentRepository
 import com.easysystems.easyorderservice.repositories.SessionRepository
 import mu.KLogging
+import org.apache.commons.logging.Log
 import org.springframework.stereotype.Service
 
 @Service
-class SessionService(val sessionRepository: SessionRepository,
-                     val tabletopService: TabletopService,
-                     val orderService: OrderService,
-                     val authenticationService: AuthenticationService) {
+class SessionService(
+    val sessionRepository: SessionRepository,
+    val molliePaymentService: MolliePaymentService,
+    val tabletopService: TabletopService,
+    val orderService: OrderService,
+    val authenticationService: AuthenticationService
+) {
 
     companion object : KLogging()
 
@@ -34,6 +41,7 @@ class SessionService(val sessionRepository: SessionRepository,
         return session.let {
 
             val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
+
             SessionDTO(it.id, SessionDTO.Status.valueOf(it.status!!), tabletopDTO, it.total)
         }
     }
@@ -48,13 +56,24 @@ class SessionService(val sessionRepository: SessionRepository,
                 val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
                 val ordersDTO = ArrayList<OrderDTO>()
 
-                for (o in it.orders!!) {
+                for (o in it.orders) {
                     orderService.retrieveOrderById(o.id!!).let { orderDTO ->
                         ordersDTO.add(orderDTO)
                     }
                 }
 
-                SessionDTO(it.id, SessionDTO.Status.valueOf(it.status!!), tabletopDTO, it.total, ordersDTO)
+                val molliePaymentDTO = it.payment?.molliePaymentId?.let { molliePaymentId ->
+                    molliePaymentService.retrieveMolliePaymentById(molliePaymentId)
+                }
+
+                SessionDTO(
+                    it.id,
+                    SessionDTO.Status.valueOf(it.status!!),
+                    tabletopDTO,
+                    it.total,
+                    ordersDTO,
+                    molliePaymentDTO
+                )
             }
         } else {
             throw SessionNotFoundException("No session found for given id: $id")
@@ -69,13 +88,24 @@ class SessionService(val sessionRepository: SessionRepository,
                 val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
                 val ordersDTO = ArrayList<OrderDTO>()
 
-                for (o in it.orders!!) {
+                for (o in it.orders) {
                     orderService.retrieveOrderById(o.id!!).let { orderDTO ->
                         ordersDTO.add(orderDTO)
                     }
                 }
 
-                SessionDTO(it.id, SessionDTO.Status.valueOf(it.status!!), tabletopDTO, it.total, ordersDTO)
+                val molliePaymentDTO = it.payment?.molliePaymentId?.let { molliePaymentId ->
+                    molliePaymentService.retrieveMolliePaymentById(molliePaymentId)
+                }
+
+                SessionDTO(
+                    it.id,
+                    SessionDTO.Status.valueOf(it.status!!),
+                    tabletopDTO,
+                    it.total,
+                    ordersDTO,
+                    molliePaymentDTO
+                )
 
             } as ArrayList<SessionDTO>
     }
@@ -83,7 +113,9 @@ class SessionService(val sessionRepository: SessionRepository,
     fun updateSession(id: Int, sessionDTO: SessionDTO): SessionDTO {
 
         val session = sessionRepository.findById(id)
-        val tabletop = sessionDTO.tabletopDTO?.authCode?.let { authCode -> Tabletop(sessionDTO.tabletopDTO?.id, authCode) }
+        val tabletop = sessionDTO.tabletopDTO?.authCode?.let { authCode ->
+            Tabletop(sessionDTO.tabletopDTO?.id, authCode)
+        }
 
         return if (session.isPresent) {
             session.get().let {
@@ -98,6 +130,13 @@ class SessionService(val sessionRepository: SessionRepository,
                     }
                 }
 
+                sessionDTO.payment?.molliePaymentId?.let { molliePaymentId ->
+                    molliePaymentService.updateMolliePayment(
+                        molliePaymentId,
+                        sessionDTO.payment!!
+                    )
+                }
+
                 sessionRepository.save(it)
 
                 val tabletopDTO = tabletop?.id?.let { tabletopId -> tabletopService.retrieveTabletopById(tabletopId) }
@@ -109,7 +148,18 @@ class SessionService(val sessionRepository: SessionRepository,
                     }
                 }
 
-                SessionDTO(it.id, SessionDTO.Status.valueOf(it.status!!), tabletopDTO, it.total, ordersDTO)
+                val molliePaymentDTO = it.payment?.molliePaymentId?.let { molliePaymentId ->
+                    molliePaymentService.retrieveMolliePaymentById(molliePaymentId)
+                }
+
+                SessionDTO(
+                    it.id,
+                    SessionDTO.Status.valueOf(it.status!!),
+                    tabletopDTO,
+                    it.total,
+                    ordersDTO,
+                    molliePaymentDTO
+                )
             }
         } else {
             throw SessionNotFoundException("No session found for given id: $id")
@@ -135,21 +185,39 @@ class SessionService(val sessionRepository: SessionRepository,
 
         if (isVerified) {
 
-            val sessionByTabletopId = sessionRepository.findByTabletopId(tabletopId)
+            val sessionByTabletopId = sessionRepository.findByTabletopId(tabletopId, "OPENED")
 
             return if (sessionByTabletopId != null) {
 
                 logger.info("Session found: $sessionByTabletopId")
-
                 sessionByTabletopId.id?.let { retrieveSessionById(it) }
+
             } else {
 
                 val tabletopDTO = TabletopDTO(tabletopId, authCode)
-                val sessionDTO = SessionDTO(tabletopDTO=tabletopDTO)
+                val sessionDTO = SessionDTO(tabletopDTO = tabletopDTO)
 
                 createSession(sessionDTO)
             }
         } else {
+            return null
+        }
+    }
+
+    fun retrieveSessionByMollieId(mollieId: Int): SessionDTO? {
+
+        logger.info("Webhook from mollie received: $mollieId")
+
+        val sessionByMollieId = sessionRepository.findByMollieId(mollieId)
+
+        return if (sessionByMollieId != null) {
+
+            logger.info("Session found: $sessionByMollieId")
+            sessionByMollieId.id?.let { retrieveSessionById(it) }
+
+        } else {
+
+            logger.info("No session found for Mollie id: $mollieId")
             return null
         }
     }

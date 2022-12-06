@@ -18,5 +18,11 @@ data class Session(
         cascade = [CascadeType.ALL],
         orphanRemoval = true
     )
-    var orders: MutableList<Order> = mutableListOf()
+    var orders: MutableList<Order> = mutableListOf(),
+    @OneToOne(
+        mappedBy = "session",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true
+    )
+    var payment: MolliePayment? = null
 )
