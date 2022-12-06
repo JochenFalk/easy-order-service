@@ -13,7 +13,7 @@ class OrderDTO(
 ) {
     enum class Status {
         OPENED,
-        CLOSED,
+        SENT,
         LOCKED
     }
 }

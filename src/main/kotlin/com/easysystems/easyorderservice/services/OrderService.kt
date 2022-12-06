@@ -2,7 +2,6 @@ package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.data.OrderDTO
-import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.entities.Order
 import com.easysystems.easyorderservice.exceptions.*
 import com.easysystems.easyorderservice.repositories.OrderRepository

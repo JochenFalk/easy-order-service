@@ -9,11 +9,13 @@ data class SessionDTO(
     var tabletopDTO: TabletopDTO? = null,
     @get:NotNull(message = "Property 'total' cannot be null")
     var total: Double? = 0.0,
-    var orders: ArrayList<OrderDTO>? = ArrayList()
+    var orders: ArrayList<OrderDTO>? = ArrayList(),
+    var payment: MolliePaymentDTO? = null
 ) {
     enum class Status {
         OPENED,
         CLOSED,
-        LOCKED
+        LOCKED,
+        CHANGED
     }
 }
