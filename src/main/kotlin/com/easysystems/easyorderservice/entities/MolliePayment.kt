@@ -14,6 +14,7 @@ data class MolliePayment(
     val expiresAt: String? = null,
     val id: String? = null,
     val isCancelable: Boolean? = null,
+    val method: String? = null,
     val mode: String? = null,
     val profileId: String? = null,
     val checkoutUrl: String? = null,
@@ -28,7 +29,7 @@ data class MolliePayment(
 ) {
     override fun toString(): String {
         return "MolliePayment(molliePaymentId:$molliePaymentId, amount:$amount, createdAt:$createdAt, description:$description, " +
-                "expiresAt:$expiresAt, id:$id, isCancelable:$isCancelable, mode:$mode, profileId:$profileId, checkoutUrl:$checkoutUrl, " +
+                "expiresAt:$expiresAt, id:$id, isCancelable:$isCancelable, method:$method, mode:$mode, profileId:$profileId, checkoutUrl:$checkoutUrl, " +
                 "redirectUrl:$redirectUrl, webhookUrl:$webhookUrl, resource:$resource, sequenceType:$sequenceType, status:$status, " +
                 "session: ${session?.id})"
     }
