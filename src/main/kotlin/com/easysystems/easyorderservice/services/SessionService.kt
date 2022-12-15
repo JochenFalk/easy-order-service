@@ -203,6 +203,8 @@ class SessionService(
 
     fun updateSessionStatus(id: String) {
 
+        logger.info("Webhook call received for Mollie payment id: $id")
+
         val molliePaymentDTO = molliePaymentService.retrieveMolliePaymentByMolliePaymentId(id)
         val session = molliePaymentDTO.sessionId?.let { sessionRepository.findById(it) }
 
@@ -212,8 +214,7 @@ class SessionService(
                     it.status = "CHANGED"
                     sessionRepository.save(it)
 
-                    logger.info("Webhook call received for Mollie payment id: $id " +
-                            " Session updated for session with id: ${it.id}")
+                    logger.info("Session updated for session with id: ${it.id}")
                 }
             }
         }

@@ -72,9 +72,8 @@ class MolliePaymentService(
                 it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
                 it.session?.id)
         }
-            ?: throw PaymentNotFoundException("No mollie payment found for given id. " +
-                    "Payment might be overridden when method was changed: " +
-                    "$mollieId")
+            ?: throw PaymentNotFoundException("No mollie payment found for given id: $mollieId " +
+                    "Payment might be overridden when method was changed")
     }
 
     fun retrieveAllMolliePayments(): ArrayList<MolliePaymentDTO> {
