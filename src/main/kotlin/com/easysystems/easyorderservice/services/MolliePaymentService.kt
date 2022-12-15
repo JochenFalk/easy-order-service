@@ -2,7 +2,7 @@ package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.*
 import com.easysystems.easyorderservice.entities.MolliePayment
-import com.easysystems.easyorderservice.exceptions.OrderNotFoundException
+import com.easysystems.easyorderservice.exceptions.PaymentNotFoundException
 import com.easysystems.easyorderservice.exceptions.SessionNotValidException
 import com.easysystems.easyorderservice.repositories.MolliePaymentRepository
 import com.easysystems.easyorderservice.repositories.SessionRepository
@@ -30,7 +30,7 @@ class MolliePaymentService(
         val molliePayment = molliePaymentDTO.let {
 
             MolliePayment(it.molliePaymentId, it.amount, it.createdAt, it.description, it.expiresAt, it.id, it.isCancelable,
-            it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
+                it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
                 sessionOptional.get())
         }
 
@@ -41,7 +41,7 @@ class MolliePaymentService(
         return molliePayment.let {
 
             MolliePaymentDTO(it.molliePaymentId, it.amount, it.createdAt, it.description, it.expiresAt, it.id, it.isCancelable,
-                it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
+                it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
                 it.session?.id)
         }
     }
@@ -54,12 +54,26 @@ class MolliePaymentService(
             molliePayment.get().let {
 
                 MolliePaymentDTO(it.molliePaymentId, it.amount, it.createdAt, it.description, it.expiresAt, it.id, it.isCancelable,
-                    it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
+                    it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
                     it.session?.id)
             }
         } else {
-            throw OrderNotFoundException("No mollie payment found for given id: $id")
+            throw PaymentNotFoundException("No mollie payment found for given id: $id")
         }
+    }
+
+    fun retrieveMolliePaymentByMolliePaymentId(mollieId: String): MolliePaymentDTO {
+
+        val molliePayment = molliePaymentRepository.findByMollieId(mollieId)
+
+        return molliePayment?.let {
+
+            MolliePaymentDTO(it.molliePaymentId, it.amount, it.createdAt, it.description, it.expiresAt, it.id, it.isCancelable,
+                it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
+                it.session?.id)
+        }
+            ?: throw PaymentNotFoundException("No mollie payment found for given id: $mollieId " +
+                    "Payment might be overridden when method was changed")
     }
 
     fun retrieveAllMolliePayments(): ArrayList<MolliePaymentDTO> {
@@ -68,7 +82,7 @@ class MolliePaymentService(
             .map {
 
                 MolliePaymentDTO(it.molliePaymentId, it.amount, it.createdAt, it.description, it.expiresAt, it.id, it.isCancelable,
-                    it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
+                    it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
                     it.session?.id)
 
             } as ArrayList<MolliePaymentDTO>
@@ -81,12 +95,16 @@ class MolliePaymentService(
         return if (molliePayment.isPresent) {
             molliePayment.get().let {
 
+                it.status = molliePaymentDTO.status
+
+                molliePaymentRepository.save(it)
+
                 MolliePaymentDTO(it.molliePaymentId, it.amount, it.createdAt, it.description, it.expiresAt, it.id, it.isCancelable,
-                    it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
+                    it.method, it.mode, it.profileId, it.checkoutUrl, it.redirectUrl, it.webhookUrl, it.resource, it.sequenceType, it.status,
                     it.session?.id)
             }
         } else {
-            throw OrderNotFoundException("No mollie payment found for given id: $id")
+            throw PaymentNotFoundException("No mollie payment found for given id: $id")
         }
     }
 
@@ -99,7 +117,7 @@ class MolliePaymentService(
                 molliePaymentRepository.deleteById(id)
             }
         } else {
-            throw OrderNotFoundException("No mollie payment found for given id: $id")
+            throw PaymentNotFoundException("No mollie payment found for given id: $id")
         }
     }
 }

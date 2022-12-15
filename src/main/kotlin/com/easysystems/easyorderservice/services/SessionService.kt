@@ -1,17 +1,14 @@
 package com.easysystems.easyorderservice.services
 
-import com.easysystems.easyorderservice.data.MolliePaymentDTO
 import com.easysystems.easyorderservice.data.OrderDTO
 import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
-import com.easysystems.easyorderservice.entities.MolliePayment
 import com.easysystems.easyorderservice.entities.Session
 import com.easysystems.easyorderservice.entities.Tabletop
+import com.easysystems.easyorderservice.exceptions.PaymentNotFoundException
 import com.easysystems.easyorderservice.exceptions.SessionNotFoundException
-import com.easysystems.easyorderservice.repositories.MolliePaymentRepository
 import com.easysystems.easyorderservice.repositories.SessionRepository
 import mu.KLogging
-import org.apache.commons.logging.Log
 import org.springframework.stereotype.Service
 
 @Service
@@ -185,7 +182,7 @@ class SessionService(
 
         if (isVerified) {
 
-            val sessionByTabletopId = sessionRepository.findByTabletopId(tabletopId, "OPENED")
+            val sessionByTabletopId = sessionRepository.findByTabletopId(tabletopId, "CLOSED")
 
             return if (sessionByTabletopId != null) {
 
@@ -204,21 +201,22 @@ class SessionService(
         }
     }
 
-    fun retrieveSessionByMollieId(mollieId: Int): SessionDTO? {
+    fun updateSessionStatus(id: String) {
 
-        logger.info("Webhook from mollie received: $mollieId")
+        logger.info("Webhook call received for Mollie payment id: $id")
 
-        val sessionByMollieId = sessionRepository.findByMollieId(mollieId)
+        val molliePaymentDTO = molliePaymentService.retrieveMolliePaymentByMolliePaymentId(id)
+        val session = molliePaymentDTO.sessionId?.let { sessionRepository.findById(it) }
 
-        return if (sessionByMollieId != null) {
+        if (session != null) {
+            if (session.isPresent) {
+                session.get().let {
+                    it.status = "CHANGED"
+                    sessionRepository.save(it)
 
-            logger.info("Session found: $sessionByMollieId")
-            sessionByMollieId.id?.let { retrieveSessionById(it) }
-
-        } else {
-
-            logger.info("No session found for Mollie id: $mollieId")
-            return null
+                    logger.info("Session updated for session with id: ${it.id}")
+                }
+            }
         }
     }
 }

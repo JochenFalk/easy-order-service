@@ -10,6 +10,7 @@ data class MolliePaymentDTO(
     val expiresAt: String? = null,
     val id: String? = null,
     val isCancelable: Boolean? = null,
+    val method: String? = null,
     val mode: String? = null,
     val profileId: String? = null,
     val checkoutUrl: String? = null,

@@ -15,6 +15,7 @@ data class SessionDTO(
     enum class Status {
         OPENED,
         CLOSED,
-        LOCKED
+        LOCKED,
+        CHANGED
     }
 }

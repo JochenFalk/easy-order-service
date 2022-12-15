@@ -1,7 +1,6 @@
 package com.easysystems.easyorderservice.controllers
 
 import com.easysystems.easyorderservice.data.MolliePaymentDTO
-import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.services.MolliePaymentService
 import com.easysystems.easyorderservice.services.SessionService
 import org.springframework.http.HttpStatus
@@ -39,10 +38,5 @@ class MolliePaymentController(val molliePaymentService: MolliePaymentService, va
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteMolliePayment(@PathVariable("mollieId") mollieId: Int) {
         return molliePaymentService.deleteMolliePayment(mollieId)
-    }
-
-    @PostMapping("/{id}")
-    fun retrieveSessionByMolliePaymentId(@PathVariable("id") id: Int): SessionDTO? {
-        return sessionService.retrieveSessionByMollieId(id)
     }
 }
