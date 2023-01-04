@@ -2,18 +2,19 @@ package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.ItemDTO
 import com.easysystems.easyorderservice.data.OrderDTO
-import com.easysystems.easyorderservice.entities.Order
-import com.easysystems.easyorderservice.exceptions.*
+import com.easysystems.easyorderservice.exceptions.OrderNotFoundException
+import com.easysystems.easyorderservice.exceptions.SessionNotValidException
 import com.easysystems.easyorderservice.repositories.OrderRepository
 import com.easysystems.easyorderservice.repositories.SessionRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
-import kotlin.collections.ArrayList
 
 @Service
-class OrderService(val orderRepository: OrderRepository,
-                   val sessionRepository: SessionRepository,
-                   val itemService: ItemService) {
+class OrderService(
+    val orderRepository: OrderRepository,
+    val sessionRepository: SessionRepository,
+    val itemService: ItemService
+) {
 
     companion object : KLogging()
 
@@ -23,34 +24,17 @@ class OrderService(val orderRepository: OrderRepository,
         // and order-service
         val sessionOptional = sessionRepository.findById(orderDTO.sessionId!!)
 
-        if(!sessionOptional.isPresent){
+        if (!sessionOptional.isPresent) {
             throw SessionNotValidException("Session is not valid for given id: ${orderDTO.sessionId}")
         }
 
-        val order = orderDTO.let {
-
-            val itemsAsListOfId = ArrayList<Int>()
-
-            for (i in it.items!!) {
-                itemsAsListOfId.add(i.id!!)
-            }
-
-            Order(null, it.status.toString(), itemsAsListOfId, it.total!!, sessionOptional.get())
-        }
+        val order = orderDTO.convertToOrder(id = null, session = sessionOptional.get())
 
         orderRepository.save(order)
-
         logger.info("New order created: $order")
 
         return order.let {
-
-            val itemsAsDTO = ArrayList<ItemDTO>()
-
-            for (i in it.items!!) {
-                itemsAsDTO.add(itemService.retrieveItemById(i))
-            }
-
-            OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), itemsAsDTO, it.total, it.session!!.id)
+            it.convertToOrderDTO(getItemsAsDTO(it.items!!))
         }
     }
 
@@ -60,14 +44,7 @@ class OrderService(val orderRepository: OrderRepository,
 
         return if (order.isPresent) {
             order.get().let {
-
-                val itemsAsDTO = ArrayList<ItemDTO>()
-
-                for (i in it.items!!) {
-                    itemsAsDTO.add(itemService.retrieveItemById(i))
-                }
-
-                OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), itemsAsDTO, it.total, it.session!!.id)
+                it.convertToOrderDTO(getItemsAsDTO(it.items!!))
             }
         } else {
             throw OrderNotFoundException("No order found for given id: $id")
@@ -78,15 +55,7 @@ class OrderService(val orderRepository: OrderRepository,
 
         return orderRepository.findAll()
             .map {
-
-                val itemsAsDTO = ArrayList<ItemDTO>()
-
-                for (i in it.items!!) {
-                    itemsAsDTO.add(itemService.retrieveItemById(i))
-                }
-
-                OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), itemsAsDTO, it.total, it.session!!.id)
-
+                it.convertToOrderDTO(getItemsAsDTO(it.items!!))
             } as ArrayList<OrderDTO>
     }
 
@@ -108,8 +77,7 @@ class OrderService(val orderRepository: OrderRepository,
                 it.total = orderDTO.total
 
                 orderRepository.save(it)
-
-                OrderDTO(it.id, OrderDTO.Status.valueOf(it.status!!), orderDTO.items, it.total, it.session!!.id)
+                it.convertToOrderDTO(orderDTO.items!!)
             }
         } else {
             throw OrderNotFoundException("No order found for given id: $id")
@@ -127,5 +95,16 @@ class OrderService(val orderRepository: OrderRepository,
         } else {
             throw OrderNotFoundException("No order found for given id: $id")
         }
+    }
+
+    private fun getItemsAsDTO(items: ArrayList<Int>) : ArrayList<ItemDTO> {
+
+        val itemsAsDTO = ArrayList<ItemDTO>().apply {
+            for (i in items) {
+                this.add(itemService.retrieveItemById(i))
+            }
+        }
+
+        return itemsAsDTO
     }
 }

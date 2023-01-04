@@ -1,6 +1,5 @@
 package com.easysystems.easyorderservice.controllers
 
-import com.easysystems.easyorderservice.services.MolliePaymentService
 import com.easysystems.easyorderservice.services.SessionService
 import org.springframework.web.bind.annotation.*
 

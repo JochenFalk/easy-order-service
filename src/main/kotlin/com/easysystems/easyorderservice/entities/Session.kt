@@ -1,5 +1,9 @@
 package com.easysystems.easyorderservice.entities
 
+import com.easysystems.easyorderservice.data.MolliePaymentDTO
+import com.easysystems.easyorderservice.data.OrderDTO
+import com.easysystems.easyorderservice.data.SessionDTO
+import com.easysystems.easyorderservice.data.TabletopDTO
 import javax.persistence.*
 
 @Entity
@@ -19,10 +23,35 @@ data class Session(
         orphanRemoval = true
     )
     var orders: MutableList<Order> = mutableListOf(),
-    @OneToOne(
+    @OneToMany(
         mappedBy = "session",
         cascade = [CascadeType.ALL],
         orphanRemoval = true
     )
-    var payment: MolliePayment? = null
-)
+    var payments: MutableList<MolliePayment> = mutableListOf()
+) {
+
+    fun convertToSessionDTO(
+        tabletopDTO: TabletopDTO,
+        ordersDTO: ArrayList<OrderDTO>,
+        paymentsDTO: ArrayList<MolliePaymentDTO>
+    ): SessionDTO {
+
+        val status = when (this.status) {
+            "OPENED" -> SessionDTO.Status.OPENED
+            "CLOSED" -> SessionDTO.Status.CLOSED
+            "LOCKED" -> SessionDTO.Status.LOCKED
+            "CHANGED" -> SessionDTO.Status.CHANGED
+            else -> { "" }
+        }
+
+        return SessionDTO(
+            id = this.id,
+            status = status as SessionDTO.Status,
+            tabletop = tabletopDTO,
+            total = this.total,
+            orders = ordersDTO,
+            payments = paymentsDTO
+        )
+    }
+}

@@ -1,5 +1,7 @@
 package com.easysystems.easyorderservice.entities
 
+import com.easysystems.easyorderservice.data.ItemDTO
+import com.easysystems.easyorderservice.data.OrderDTO
 import javax.persistence.*
 
 @Entity
@@ -17,5 +19,24 @@ data class Order(
 ) {
     override fun toString(): String {
         return "Order(id:$id, status:$status, items: $items, total: $total, session: ${session?.id})"
+    }
+
+    fun convertToOrderDTO(itemsAsDTO: ArrayList<ItemDTO>): OrderDTO {
+
+        val status = when (this.status) {
+            "OPENED" -> OrderDTO.Status.OPENED
+            "SENT" -> OrderDTO.Status.SENT
+            "CANCELED" -> OrderDTO.Status.CANCELED
+            "LOCKED" -> OrderDTO.Status.LOCKED
+            else -> { "" }
+        }
+
+        return OrderDTO(
+            id = this.id,
+            status = status as OrderDTO.Status,
+            items = itemsAsDTO,
+            total = this.total,
+            sessionId = this.session?.id
+        )
     }
 }

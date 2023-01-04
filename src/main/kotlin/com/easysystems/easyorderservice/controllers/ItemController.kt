@@ -21,12 +21,6 @@ import javax.validation.Valid
 @Validated
 class ItemController(val itemService: ItemService) {
 
-//    @PostMapping
-//    @ResponseStatus(HttpStatus.CREATED)
-//    fun createItem(@RequestBody @Valid itemDTO: ItemDTO): ItemDTO {
-//        return itemService.createItem(itemDTO)
-//    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createItemsByList(@RequestBody @Valid itemList: ArrayList<ItemDTO>): ArrayList<ItemDTO> {

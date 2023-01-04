@@ -30,7 +30,10 @@ class MolliePaymentController(val molliePaymentService: MolliePaymentService, va
     }
 
     @PutMapping("/{mollieId}")
-    fun updateMolliePayment(@RequestBody @Valid molliePaymentDTO: MolliePaymentDTO, @PathVariable("mollieId") mollieId: Int): MolliePaymentDTO {
+    fun updateMolliePayment(
+        @RequestBody @Valid molliePaymentDTO: MolliePaymentDTO,
+        @PathVariable("mollieId") mollieId: Int
+    ): MolliePaymentDTO {
         return molliePaymentService.updateMolliePayment(mollieId, molliePaymentDTO)
     }
 

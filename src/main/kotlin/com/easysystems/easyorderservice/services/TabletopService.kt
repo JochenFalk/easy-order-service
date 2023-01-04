@@ -1,12 +1,10 @@
 package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.TabletopDTO
-import com.easysystems.easyorderservice.entities.Tabletop
 import com.easysystems.easyorderservice.exceptions.TabletopNotFoundException
 import com.easysystems.easyorderservice.repositories.TabletopRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
-import java.util.Optional
 
 @Service
 class TabletopService(val tabletopRepository: TabletopRepository) {
@@ -15,28 +13,23 @@ class TabletopService(val tabletopRepository: TabletopRepository) {
 
     fun createTabletop(tabletopDTO: TabletopDTO): TabletopDTO {
 
-        val tabletop = Tabletop(null, tabletopDTO.authCode)
+        val tabletop = tabletopDTO.convertToTabletop(id = null)
 
         tabletopRepository.save(tabletop)
-
         logger.info("New table created: $tabletop")
 
-        return tabletop.let {
-            TabletopDTO(it.id, it.authCode)
-        }
+        return tabletop.convertToTabletopDTO()
     }
 
     fun createTabletopsByList(tabletopList: ArrayList<TabletopDTO>): ArrayList<TabletopDTO> {
 
-        val createdTabletops = ArrayList<TabletopDTO>()
-
-        tabletopList.forEach { outer ->
-            createTabletop(outer).let { inner ->
-                createdTabletops.add(inner)
+        return ArrayList<TabletopDTO>().apply {
+            tabletopList.forEach { tabletopDTO ->
+                createTabletop(tabletopDTO).let { newTabletopDTO ->
+                    this.add(newTabletopDTO)
+                }
             }
         }
-
-        return createdTabletops
     }
 
     fun retrieveTabletopById(id: Int): TabletopDTO {
@@ -44,9 +37,7 @@ class TabletopService(val tabletopRepository: TabletopRepository) {
         val tabletop = tabletopRepository.findById(id)
 
         return if (tabletop.isPresent) {
-            tabletop.get().let {
-                TabletopDTO(it.id, it.authCode)
-            }
+            tabletop.get().convertToTabletopDTO()
         } else {
             throw TabletopNotFoundException("No tabletop found for given id: $id")
         }
@@ -55,8 +46,7 @@ class TabletopService(val tabletopRepository: TabletopRepository) {
     fun retrieveAllTabletops(): ArrayList<TabletopDTO> {
 
         return tabletopRepository.findAll()
-            .map {
-                TabletopDTO(it.id, it.authCode)
+            .map {it.convertToTabletopDTO()
             } as ArrayList<TabletopDTO>
     }
 
@@ -66,10 +56,10 @@ class TabletopService(val tabletopRepository: TabletopRepository) {
 
         return if (tabletop.isPresent) {
             tabletop.get().let {
+
                 it.authCode = tabletopDTO.authCode
                 tabletopRepository.save(it)
-
-                TabletopDTO(it.id, it.authCode)
+                it.convertToTabletopDTO()
             }
         } else {
             throw TabletopNotFoundException("No tabletop found for given id: $id")

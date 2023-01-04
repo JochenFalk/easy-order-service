@@ -1,12 +1,10 @@
 package com.easysystems.easyorderservice.services
 
 import com.easysystems.easyorderservice.data.ItemDTO
-import com.easysystems.easyorderservice.entities.Item
 import com.easysystems.easyorderservice.exceptions.ItemNotFoundException
 import com.easysystems.easyorderservice.repositories.ItemRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
-import kotlin.collections.ArrayList
 
 @Service
 class ItemService(val itemRepository: ItemRepository) {
@@ -15,18 +13,12 @@ class ItemService(val itemRepository: ItemRepository) {
 
     fun createItem(itemDTO: ItemDTO): ItemDTO {
 
-        val item = itemDTO.let {
-            Item(null, it.name, it.category.toString(), it.price)
-        }
+        val item = itemDTO.convertToItem(id = null)
 
         itemRepository.save(item)
-
         logger.info("New item created: $item")
 
-        return item.let {
-            val category: ItemDTO.Category = ItemDTO.Category.valueOf(it.category)
-            ItemDTO(it.id, it.name, category, it.price)
-        }
+        return item.convertToItemDTO()
     }
 
     fun createItemsByList(itemList: ArrayList<ItemDTO>): ArrayList<ItemDTO> {
@@ -46,12 +38,8 @@ class ItemService(val itemRepository: ItemRepository) {
 
         val item = itemRepository.findById(id)
 
-        return if (item.isPresent)
-        {
-            item.get().let {
-                val category: ItemDTO.Category = ItemDTO.Category.valueOf(it.category)
-                ItemDTO(it.id, it.name, category, it.price)
-            }
+        return if (item.isPresent) {
+            item.get().convertToItemDTO()
         } else {
             throw ItemNotFoundException("No item found for given id: $id")
         }
@@ -65,8 +53,7 @@ class ItemService(val itemRepository: ItemRepository) {
 
         return result
             .map {
-                val category = ItemDTO.Category.valueOf(it.category)
-                ItemDTO(it.id, it.name, category, it.price)
+                it.convertToItemDTO()
             } as ArrayList<ItemDTO>
     }
 
@@ -74,16 +61,15 @@ class ItemService(val itemRepository: ItemRepository) {
 
         val item = itemRepository.findById(id)
 
-        return if(item.isPresent)
-        {
+        return if (item.isPresent) {
             item.get().let {
+
                 it.name = itemDTO.name
                 it.category = itemDTO.category.toString()
                 it.price = itemDTO.price
-                itemRepository.save(it)
 
-                val category = ItemDTO.Category.valueOf(it.category)
-                ItemDTO(it.id, it.name, category, it.price)
+                itemRepository.save(it)
+                it.convertToItemDTO()
             }
         } else {
             throw ItemNotFoundException("No item found for given id: $id")
@@ -94,8 +80,7 @@ class ItemService(val itemRepository: ItemRepository) {
 
         val item = itemRepository.findById(id)
 
-        if(item.isPresent)
-        {
+        if (item.isPresent) {
             item.get().let {
                 itemRepository.deleteById(id)
             }

@@ -1,11 +1,12 @@
 package com.easysystems.easyorderservice.services
 
+import com.easysystems.easyorderservice.data.MolliePaymentDTO
 import com.easysystems.easyorderservice.data.OrderDTO
 import com.easysystems.easyorderservice.data.SessionDTO
 import com.easysystems.easyorderservice.data.TabletopDTO
-import com.easysystems.easyorderservice.entities.Session
+import com.easysystems.easyorderservice.entities.MolliePayment
+import com.easysystems.easyorderservice.entities.Order
 import com.easysystems.easyorderservice.entities.Tabletop
-import com.easysystems.easyorderservice.exceptions.PaymentNotFoundException
 import com.easysystems.easyorderservice.exceptions.SessionNotFoundException
 import com.easysystems.easyorderservice.repositories.SessionRepository
 import mu.KLogging
@@ -26,51 +27,38 @@ class SessionService(
 
         val session = sessionDTO.let {
 
-            val tabletop = Tabletop(it.tabletopDTO!!.id, it.tabletopDTO!!.authCode)
+            val tabletop = it.tabletop!!.convertToTabletop(id = null)
+            val orders = ArrayList<Order>()
+            val payments = ArrayList<MolliePayment>()
 
-            Session(null, it.status.toString(), tabletop)
+            it.convertToSession(id = null, tabletop = tabletop, orders = orders, payments = payments)
         }
 
         sessionRepository.save(session)
-
         logger.info("New session created: $session")
 
         return session.let {
 
             val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
+            val ordersDTO = getOrdersAsDTO(it.orders)
+            val paymentsDTO = getPaymentsAsDTO(it.payments)
 
-            SessionDTO(it.id, SessionDTO.Status.valueOf(it.status!!), tabletopDTO, it.total)
+            it.convertToSessionDTO(tabletopDTO, ordersDTO, paymentsDTO)
         }
     }
 
     fun retrieveSessionById(id: Int): SessionDTO {
 
-        val session = sessionRepository.findById(id)
+        val sessionToReturn = sessionRepository.findById(id)
 
-        return if (session.isPresent) {
-            session.get().let {
+        return if (sessionToReturn.isPresent) {
+            sessionToReturn.get().let { session ->
 
-                val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
-                val ordersDTO = ArrayList<OrderDTO>()
+                val tabletopDTO = tabletopService.retrieveTabletopById(session.tabletop!!.id!!)
+                val ordersDTO = getOrdersAsDTO(session.orders)
+                val paymentsDTO = getPaymentsAsDTO(session.payments)
 
-                for (o in it.orders) {
-                    orderService.retrieveOrderById(o.id!!).let { orderDTO ->
-                        ordersDTO.add(orderDTO)
-                    }
-                }
-
-                val molliePaymentDTO = it.payment?.molliePaymentId?.let { molliePaymentId ->
-                    molliePaymentService.retrieveMolliePaymentById(molliePaymentId)
-                }
-
-                SessionDTO(
-                    it.id,
-                    SessionDTO.Status.valueOf(it.status!!),
-                    tabletopDTO,
-                    it.total,
-                    ordersDTO,
-                    molliePaymentDTO
-                )
+                session.convertToSessionDTO(tabletopDTO, ordersDTO, paymentsDTO)
             }
         } else {
             throw SessionNotFoundException("No session found for given id: $id")
@@ -80,46 +68,30 @@ class SessionService(
     fun retrieveAllSessions(): ArrayList<SessionDTO> {
 
         return sessionRepository.findAll()
-            .map {
+            .map { session ->
 
-                val tabletopDTO = tabletopService.retrieveTabletopById(it.tabletop!!.id!!)
-                val ordersDTO = ArrayList<OrderDTO>()
+                val tabletopDTO = tabletopService.retrieveTabletopById(session.tabletop!!.id!!)
+                val ordersDTO = getOrdersAsDTO(session.orders)
+                val paymentsDTO = getPaymentsAsDTO(session.payments)
 
-                for (o in it.orders) {
-                    orderService.retrieveOrderById(o.id!!).let { orderDTO ->
-                        ordersDTO.add(orderDTO)
-                    }
-                }
-
-                val molliePaymentDTO = it.payment?.molliePaymentId?.let { molliePaymentId ->
-                    molliePaymentService.retrieveMolliePaymentById(molliePaymentId)
-                }
-
-                SessionDTO(
-                    it.id,
-                    SessionDTO.Status.valueOf(it.status!!),
-                    tabletopDTO,
-                    it.total,
-                    ordersDTO,
-                    molliePaymentDTO
-                )
+                session.convertToSessionDTO(tabletopDTO, ordersDTO, paymentsDTO)
 
             } as ArrayList<SessionDTO>
     }
 
     fun updateSession(id: Int, sessionDTO: SessionDTO): SessionDTO {
 
-        val session = sessionRepository.findById(id)
-        val tabletop = sessionDTO.tabletopDTO?.authCode?.let { authCode ->
-            Tabletop(sessionDTO.tabletopDTO?.id, authCode)
+        val sessionToUpdate = sessionRepository.findById(id)
+        val tabletop = sessionDTO.tabletop?.authCode?.let { authCode ->
+            Tabletop(sessionDTO.tabletop?.id, authCode)
         }
 
-        return if (session.isPresent) {
-            session.get().let {
+        return if (sessionToUpdate.isPresent) {
+            sessionToUpdate.get().let { session ->
 
-                it.status = sessionDTO.status.toString()
-                it.tabletop = tabletop
-                it.total = sessionDTO.total
+                session.status = sessionDTO.status.toString()
+                session.tabletop = tabletop
+                session.total = sessionDTO.total
 
                 if (sessionDTO.orders != null) {
                     for (o in sessionDTO.orders!!) {
@@ -127,36 +99,19 @@ class SessionService(
                     }
                 }
 
-                sessionDTO.payment?.molliePaymentId?.let { molliePaymentId ->
-                    molliePaymentService.updateMolliePayment(
-                        molliePaymentId,
-                        sessionDTO.payment!!
-                    )
-                }
-
-                sessionRepository.save(it)
-
-                val tabletopDTO = tabletop?.id?.let { tabletopId -> tabletopService.retrieveTabletopById(tabletopId) }
-                val ordersDTO = ArrayList<OrderDTO>()
-
-                for (o in it.orders) {
-                    orderService.retrieveOrderById(o.id!!).let { orderDTO ->
-                        ordersDTO.add(orderDTO)
+                if (sessionDTO.payments != null) {
+                    for (p in sessionDTO.payments!!) {
+                        molliePaymentService.updateMolliePayment(p.molliePaymentId!!, p)
                     }
                 }
 
-                val molliePaymentDTO = it.payment?.molliePaymentId?.let { molliePaymentId ->
-                    molliePaymentService.retrieveMolliePaymentById(molliePaymentId)
-                }
+                sessionRepository.save(session)
 
-                SessionDTO(
-                    it.id,
-                    SessionDTO.Status.valueOf(it.status!!),
-                    tabletopDTO,
-                    it.total,
-                    ordersDTO,
-                    molliePaymentDTO
-                )
+                val tabletopDTO = tabletopService.retrieveTabletopById(session.tabletop!!.id!!)
+                val ordersDTO = getOrdersAsDTO(session.orders)
+                val paymentsDTO = getPaymentsAsDTO(session.payments)
+
+                session.convertToSessionDTO(tabletopDTO, ordersDTO, paymentsDTO)
             }
         } else {
             throw SessionNotFoundException("No session found for given id: $id")
@@ -192,7 +147,7 @@ class SessionService(
             } else {
 
                 val tabletopDTO = TabletopDTO(tabletopId, authCode)
-                val sessionDTO = SessionDTO(tabletopDTO = tabletopDTO)
+                val sessionDTO = SessionDTO(id = null, tabletop = tabletopDTO)
 
                 createSession(sessionDTO)
             }
@@ -213,10 +168,32 @@ class SessionService(
                 session.get().let {
                     it.status = "CHANGED"
                     sessionRepository.save(it)
-
                     logger.info("Session updated for session with id: ${it.id}")
                 }
             }
         }
     }
+
+    private fun getOrdersAsDTO(orders: MutableList<Order>): ArrayList<OrderDTO> {
+
+        val ordersDTO = ArrayList<OrderDTO>().apply {
+            for (o in orders) {
+                this.add(orderService.retrieveOrderById(o.id!!))
+            }
+        }
+
+        return ordersDTO
+    }
+
+    private fun getPaymentsAsDTO(payments: MutableList<MolliePayment>): ArrayList<MolliePaymentDTO> {
+
+        val paymentsDTO = ArrayList<MolliePaymentDTO>().apply {
+            for (p in payments) {
+                this.add(molliePaymentService.retrieveMolliePaymentById(p.molliePaymentId!!))
+            }
+        }
+
+        return paymentsDTO
+    }
 }
+
