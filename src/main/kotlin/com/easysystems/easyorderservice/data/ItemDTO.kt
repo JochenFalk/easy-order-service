@@ -8,7 +8,8 @@ data class ItemDTO(
     @get:NotBlank(message = "Property 'name' cannot be blank")
     var name: String,
     var category: Category,
-    var price: Double
+    var price: Double,
+    var description: String? = null
 ) {
     enum class Category {
         APPETIZER,
@@ -22,7 +23,8 @@ data class ItemDTO(
             id = id ?: this.id,
             name = this.name,
             category = this.category.toString(),
-            price = this.price
+            price = this.price,
+            description = this.description
         )
     }
 }

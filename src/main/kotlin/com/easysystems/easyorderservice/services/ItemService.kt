@@ -67,6 +67,7 @@ class ItemService(val itemRepository: ItemRepository) {
                 it.name = itemDTO.name
                 it.category = itemDTO.category.toString()
                 it.price = itemDTO.price
+                it.description = itemDTO.description
 
                 itemRepository.save(it)
                 it.convertToItemDTO()

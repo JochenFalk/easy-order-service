@@ -11,7 +11,8 @@ data class Item(
     val id: Int?,
     var name: String,
     var category: String,
-    var price: Double
+    var price: Double,
+    var description: String? = null
 ) {
     fun convertToItemDTO(): ItemDTO {
 
@@ -27,7 +28,8 @@ data class Item(
             id = this.id,
             name = this.name,
             category = category as ItemDTO.Category,
-            price = this.price
+            price = this.price,
+            description = this.description
         )
     }
 }
